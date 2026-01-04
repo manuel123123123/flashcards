@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin - Limpiar Duplicados Horóscopo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-center">🧹 Admin: Limpiar Duplicados Horóscopo</h1>
+        
+        <div class="bg-yellow-800 border border-yellow-600 p-4 rounded-lg mb-6">
+            <p class="font-semibold">⚠️ IMPORTANTE:</p>
+            <p>Esta herramienta elimina badges del horóscopo duplicados de MongoDB.</p>
+            <p>Primero ejecuta PREVIEW para ver qué se va a eliminar.</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4 mb-6">
+            <button id="previewBtn" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold transition">
+                👀 Preview (Ver qué se eliminará)
+            </button>
+            <button id="executeBtn" class="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg font-semibold transition">
+                🧹 EJECUTAR Limpieza
+            </button>
+        </div>
+
+        <div id="loading" class="hidden bg-gray-800 p-4 rounded-lg mb-4">
+            <p class="text-center">⏳ Procesando...</p>
+        </div>
+
+        <div id="results" class="bg-gray-800 p-4 rounded-lg hidden"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://macaflashbackend.vercel.app';
+        // const API_BASE = 'http://localhost:4000'; // Para desarrollo local
+
+        const previewBtn = document.getElementById('previewBtn');
+        const executeBtn = document.getElementById('executeBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+
+        async function cleanDuplicates(preview = true) {
+            loading.classList.remove('hidden');
+            results.classList.add('hidden');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/clean-horoscope-duplicates`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        adminSecret: 'clean-horoscope-2024',
+                        preview: preview
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResults(data, preview);
+                } else {
+                    throw new Error(data.error || 'Error desconocido');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                results.innerHTML = `
+                    <div class="bg-red-800 border border-red-600 p-4 rounded">
+                        <h3 class="font-semibold text-red-200">❌ Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+                results.classList.remove('hidden');
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        function displayResults(data, preview) {
+            const color = preview ? 'blue' : 'green';
+            const icon = preview ? '👀' : '✅';
+            
+            let html = `
+                <div class="bg-${color}-800 border border-${color}-600 p-4 rounded mb-4">
+                    <h3 class="font-semibold text-${color}-200">${icon} ${data.message}</h3>
+                    <div class="mt-2 text-sm">
+                        <p>• Usuarios analizados: ${data.usersAnalyzed}</p>
+                        <p>• Usuarios con duplicados: ${data.usersWithDuplicates}</p>
+                        <p>• Total duplicados ${preview ? 'encontrados' : 'eliminados'}: ${data.totalDuplicatesFound}</p>
+                    </div>
+                </div>
+            `;
+
+            if (data.sampleUsers && data.sampleUsers.length > 0) {
+                html += `
+                    <div class="bg-gray-700 p-4 rounded">
+                        <h4 class="font-semibold mb-2">📊 Muestra de usuarios afectados:</h4>
+                        <div class="space-y-2 text-sm">
+                `;
+                
+                data.sampleUsers.forEach(user => {
+                    html += `
+                        <div class="bg-gray-800 p-2 rounded">
+                            <p class="font-medium">${user.username}: ${user.duplicatesRemoved} duplicados</p>
+                    `;
+                    
+                    if (user.cleanupDetails && user.cleanupDetails.length > 0) {
+                        html += `<div class="ml-4 mt-1 text-gray-300">`;
+                        user.cleanupDetails.forEach(detail => {
+                            html += `<p>• ${detail.hanzi}: ${detail.badgesToRemove} badges eliminados</p>`;
+                        });
+                        html += `</div>`;
+                    }
+                    
+                    html += `</div>`;
+                });
+                
+                html += `</div></div>`;
+            }
+
+            results.innerHTML = html;
+            results.classList.remove('hidden');
+        }
+
+        previewBtn.addEventListener('click', () => cleanDuplicates(true));
+        executeBtn.addEventListener('click', () => {
+            if (confirm('¿Estás seguro? Esta acción ELIMINARÁ los duplicados de la base de datos.')) {
+                cleanDuplicates(false);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,3226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Historia - MacaFlashGame</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Jersey+10:wght@400&display=swap" rel="stylesheet">
+  <style>
+    .jersey-font-niveles {
+      font-family: 'Jersey 10', monospace;
+    }
+    .jersey-font-dropdown {
+      font-family: 'Jersey 10', monospace;
+    }
+    
+    /* ========= OPTIMIZACIONES PARA iOS - PREVENIR PARPADEO ========= */
+    /* Forzar aceleración de hardware para imágenes de fondo */
+    .story-background {
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      -webkit-perspective: 1000px;
+      perspective: 1000px;
+    }
+    
+    /* Optimizaciones específicas para Safari/iOS */
+    @supports (-webkit-touch-callout: none) {
+      .story-background {
+        -webkit-transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0);
+        will-change: background-image;
+      }
+      
+      .story-character img {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+      }
+      
+      /* Prevenir parpadeo durante cambios de imagen */
+      .story-container * {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<script>
+/* ========= SISTEMA DE HISTORIA / VISUAL NOVEL ========= */
+
+// Datos de las escenas de historia (global)
+window.storyScenes = {
+  chapter1: [
+    {
+      character: 'lili2.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: '¡Eres tu! Tu eres {username}. ¡No me lo puedo creer!'
+    },
+    {
+      character: 'lili14.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'La profesía se ha cumplido. Llegaste para salvar este mundo de la Emperatriz y la oscuridad.'
+    },
+    {
+      character: 'lili15.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: '¡Si! Definitivamente eres tu {username}. Te han mandando Maca Laoshi y Manu Shi a salvarnos.'
+    },
+    {
+      character: 'lili15.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: '{username}',
+      dialogue: 'Ehhh...si, si, ¡Soy yo!'
+    },
+    {
+      character: 'lili15.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: '¡Que felicidad! Estuvimos esperándote.'
+    },
+     {
+      character: 'lili10.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Años atrás vivíamos en un mundo en armonía junto a nuestros animales del horóscopo protectores.'
+    },
+     {
+      character: 'lili8.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Hasta que un día...'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'emperatriz.webp',
+      speaker: 'Lili',
+      dialogue: 'Ella apareció. Una figura en el cielo que se posa en lo más alto de las montañas.',
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'detroy0.webp',
+      speaker: 'Lili',
+      dialogue: 'Y junto a su llegada empezó la destrucción de este mundo.',
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'detroy0.webp',
+      speaker: 'Lili',
+      dialogue: 'Nuestros animales guardianes la enfrentaron en una dura batalla. Pero fueron derrotados.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'batallaoka.webp',
+      speaker: 'Lili',
+      dialogue: 'Viendo que la destrucción avanzaba, cientos de héroes han intentado enfrentarla.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'hero.webp',
+      speaker: 'Lili',
+      dialogue: 'Aunque ninguno ha podido llegar a la cima. Otros han caído bajo su control.'
+      },
+      {
+      character: 'lili8.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Por eso la llamamos la Emperatriz.',
+    },
+       {
+      character: 'lili8.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Pero... ¿Eso quiere decir que tengamos que rendirnos?'
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: '¡NO! El sacrificio de nuestra gente no ha sido en vano.'
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Después de tantas expediciones pudimos descubrir su punto débil.'
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'La debilidad de la Emperatriz son ... LOS CARACTERES CHINOS.'
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Fue por eso que inicié mi búsqueda de los caracteres.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'exploreice.webp',
+      speaker: 'Lili',
+      dialogue: 'Viajamos de pueblo en pueblo, cruzamos por tormentas heladas.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'explore0.webp',
+      speaker: 'Lili',
+      dialogue: 'Y llegamos al Oeste, donde se encuentran las antiguas escrituras. Pasamos varios días allí ...'
+    },
+    {
+      character: 'lili15.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Hasta que un día de alguna manera mágica nos pudimos comunicar con la profesora Maca Laoshi y Manu Shi. '
+    },
+    {
+      character: 'lili15.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Fue un momento breve, se abrió un portal y allí estaban ellos dos. Le conté todo y le supliqué que nos ayuden a salvar este mundo.'
+    },
+    {
+      character: 'lili14.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Y fue ahí donde me dijo que mandaría a uno de sus mejores estudiantes.'
+    },
+    {
+      character: 'lili15.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Lo que sí me han dicho es que te explique cómo funciona este mundo, cómo conseguir caracteres y subirlos de nivel.'
+    },
+    {
+      character: 'lili15.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'para derrotar a la Emperatriz y a los Animales del Horóscopo bajo su control.'
+    },
+    {
+      character: 'lili16.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Estos son todos los caracteres que encontré en nuestro continente. Hay dos continentes más.'
+    },
+     {
+      character: 'lili10.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Sin embargo, es muy difícil cruzar el mar sin enfrentarnos a los desafíos de la Emperatriz.'
+    },
+    {
+      character: 'lili1.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Manu me dijo que ha hecho un video sobre cómo funciona, me pidió que lo vieras.'
+    },
+    {
+      character: 'lili5.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Creo que lo ha dejado en un portal mágico, me dijo que tienen que escanear esto.'
+    },
+    {
+      character: 'lili5.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'De todos modos yo también te lo explicaré con mis palabras. Ven déjame que te muestre. '
+    },
+    {
+      character: 'lili5.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Aclaración',
+      dialogue: '(Pudes ver el video de Manu, o mirar el tutorial que está en Modo Historia para aprender cómo funciona MacaLaoshi Flashcards) '
+    }
+
+
+
+
+  ],
+  chapter2: [
+    {
+      character: 'lili2.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Muy bien! Ahora veamos cómo funcionan tus poderes en este mundo.'
+    },
+
+    {
+      character: null,
+      position: 'center',
+      background: 'e1.jpg',
+      speaker: 'Lili',
+      dialogue: 'He puesto todos los caracteres que encontré en este continente en el Coleccionar Caracteres.'
+    },
+    
+    {
+      character: null,
+      position: 'center',
+      background: 'e2.jpg',
+      speaker: 'Lili',
+      dialogue: 'Maca y Manu me han ayudado a ordenarlos por unidades. Así es como los aprenden sus estudiantes.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e3.jpg',
+      speaker: 'Lili',
+      dialogue: 'Abajo de las unidades verás un botón "Todo N1", donde te mostrará todas las unidades juntas al azar.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e3.jpg',
+      speaker: 'Lili',
+      dialogue: 'Puedes usarlo para aprender caracteres o poner a prueba tu conocimiento del Nivel 1. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e4.jpg',
+      speaker: 'Lili',
+      dialogue: 'El objetivo es juntar caracteres a “Mi colección” y subirlos de nivel para que sean más poderosos.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e4.jpg',
+      speaker: 'Lili',
+      dialogue: 'De esta manera juntaremos fuerzas para vencer a la Emperatriz! '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e5.jpg',
+      speaker: 'Lili',
+      dialogue: 'Okay, ¿Cómo juntamos caracteres? Primero entras a una unidad.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e6.jpg',
+      speaker: 'Lili',
+      dialogue: 'Aparecerá esta pantalla con todos los caracteres de la unidad, para ver cuáles tenemos y cuáles no. Le damos en Entrar a la unidad.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e7.jpg',
+      speaker: 'Lili',
+      dialogue: 'Para juntar caracteres necesitas ver las unidades y tocar en “lo sé” si es que lo sabes, y en “no lo sé” si te ha costado reconocerlo.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e8.jpg',
+      speaker: 'Lili',
+      dialogue: 'Los caracteres que le des en “lo sé” se irán a “Conocidas”. Aquí podrás jugar nuevamente con los caracteres que conozcas y SIN castigo.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e9.jpg',
+      speaker: 'Lili',
+      dialogue: 'Los que te cuesten reconocer se guardarán en “Repasar” y en “Confirmar” donde podrás volver a jugar y mandarlas a "Conocidas".'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e9.jpg',
+      speaker: 'Lili',
+      dialogue: 'Puedes jugar primero en “Repasar”, y luego en “Confirmar” que tendrá los mismos caracteres para que confirmes una vez más que ya lo sabes. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e9.jpg',
+      speaker: 'Lili',
+      dialogue: 'Una vez que conozcas los caracteres que tenías en “Repasar” y en “Confirmar”, estos caracteres volverán a aparece en “Conocidas”.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e4.jpg',
+      speaker: 'Lili',
+      dialogue: 'Todos los caracteres que estén en “Conocidas” formar parte de “Mi colección” que encontrarás tocando el botón.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e10.jpg',
+      speaker: 'Lili',
+      dialogue: 'Aquí verás todos los caracteres que tienes coleccionados. Verás el hanzi, verás su categoría osea si es sustantivo, adjetivo, verbo o especial.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e10.jpg',
+      speaker: 'Lili',
+      dialogue: 'También verás su nivel. El nivel es muy importante para subir más puntos. Luego veremos cómo subirlos de nivel.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e11.jpg',
+      speaker: 'Lili',
+      dialogue: 'También he puesto unos filtros, para que puedas ver el hanzi, el pinyin y el significado de toda tu colección'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e12.jpg',
+      speaker: 'Lili',
+      dialogue: 'o si quieres puedes tocar individualmente el caracter y te mostrará el pinyin, y el significado. '
+    },
+    {
+      character: 'lili2.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Bien! Esa es la manera de juntar caracteres! '
+    },
+    {
+      character: 'lili2.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Pero para enfrentar a la Emperatriz, no solamente tenemos que tener muchos caracteres sino también fortalecer los caracteres subiéndolos de nivel. '
+    },
+    
+  ],
+  chapter3: [
+    
+    
+    {
+      character: null,
+      position: 'center',
+      background: 'e13.jpg',
+      speaker: 'Lili',
+      dialogue: '¿Cómo subo de nivel mis caracteres? Para subir los caracteres de nivel vamos a tener que hacer desafíos.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e13.jpg',
+      speaker: 'Lili',
+      dialogue: 'El desafío consiste en 10 flashcards al azar de caracteres que están en nuestra colección. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e15.jpg',
+      speaker: 'Lili',
+      dialogue: 'Yo estaré para ayudarte eliminando dos casillas.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e16.jpg',
+      speaker: 'Lili',
+      dialogue: 'Pero solo puedo hacerlo 3 veces por desafío.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e14.jpg',
+      speaker: 'Lili',
+      dialogue: 'Si acertamos ese caracter subirá un nivel. Pero también hay un riesgo.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e17.jpg',
+      speaker: 'Lili',
+      dialogue: 'Si nos equivocamos, nos indicará el correcto. Y perderemos ese caracter, sin importar el nivel que tenga. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e17.jpg',
+      speaker: 'Lili',
+      dialogue: 'Se irá de nuestra colección, y tendremos que volver a “aprenderlo” en la unidad donde lo encontramos. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e17.jpg',
+      speaker: 'Lili',
+      dialogue: 'Además su nivel vuelve a cero. Asique practica bien en tu estudio. Y sé honesto en si conocías el caracter o no.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e17.jpg',
+      speaker: 'Lili',
+      dialogue: 'El castigo es grande, pero la recompensa también lo es.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e14.jpg',
+      speaker: 'Lili',
+      dialogue: 'Cuando hagamos desafíos habrán tarjetas comunes que suman 1 nivel si respondemos bien. Pero hay 3 tipos más de tarjetas.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e18.jpg',
+      speaker: 'Lili',
+      dialogue: 'Las doradas que si respondemos bien suman 2 niveles, hay 20% de que aparezcan.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e19.jpg',
+      speaker: 'Lili',
+      dialogue: 'Las púrpuras que suman 5 niveles, hay 5% de que aparezcan.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e20.jpg',
+      speaker: 'Lili',
+      dialogue: 'Las rojas que suman 1 nivel, pero si nos equivocamos no solo perderemos ese caracter... '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e20.jpg',
+      speaker: 'Lili',
+      dialogue: 'sino también uno más al azar de nuestra colección. Hay 10% de que aparezcan.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e21.jpg',
+      speaker: 'Lili',
+      dialogue: 'En total tenemos 90 segundos para el desafío. Y dos oportunidades de equivocarnos.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e22.jpg',
+      speaker: 'Lili',
+      dialogue: 'Si se acaba el tiempo o se nos acaban las vidas, se termina el desafío. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e23.jpg',
+      speaker: 'Lili',
+      dialogue: 'Los caracteres que respondimos bien subirán de nivel, y los que respondimos mal se perderán de "Mi colección".'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e20.jpg',
+      speaker: 'Lili',
+      dialogue: '¡Ojo! si nos equivocamos en un caracter y salimos del modo desafío, tocando otro botón. Vamos a perderlo igual.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e1.jpg',
+      speaker: 'Lili',
+      dialogue: '¡Casi me he olvidado! En modo aprendizaje si te equivocas en un caracter que ya tienes en tu colección también lo pierdes! '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e1.jpg',
+      speaker: 'Lili',
+      dialogue: 'Bueno no es problema si pusiste que ya lo sabías, pues deberías saberlo.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e13.jpg',
+      speaker: 'Lili',
+      dialogue: 'Volviendo al tema Desafíos, no hay un castigo extra por perder el desafío (solo perderemos los caracteres que respondimos mal) '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e13.jpg',
+      speaker: 'Lili',
+      dialogue: 'Pero entonces ¿qué gano si terminamos el desafío a tiempo y con vidas de sobra? '
+    },
+    {
+      character: 'lili11.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Bueno… es hora de mostrarte un secreto en el que he trabajado todo este tiempo.'
+    },
+    {
+      character: 'lili12.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'El poder de las rachas. '
+    },
+    {
+      character: 'lili13.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Este es el fuego de la esperanza, que se agranda cada día que estés en nuestro mundo. '
+    },
+    {
+      character: 'lili13.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Cada desafío completado aportará una racha por día.  '
+    },
+    {
+      character: 'lili13.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Para sumar otra racha deberemos esperar hasta las 12 de la noche aproximadamente.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e24.jpg',
+      speaker: 'Lili',
+      dialogue: 'Hay un contador aquí que te avisa cuanto falta para poder sumar la siguiente.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e24.jpg',
+      speaker: 'Lili',
+      dialogue: 'Mientras más rachas tengamos más puntaje podremos lograr.'
+    },
+    {
+      character: 'lili2.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: '¡Pero cuidado! Este poder requiere de mucha dedicación, si no completamos por lo menos un desafío por día, antes de la medianoche…'
+    },
+    {
+      character: 'lili7.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Perderemos todas las rachas que teníamos acumulado, y volverá a cero.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e24.jpg',
+      speaker: 'Lili',
+      dialogue: 'El contador también nos avisará cuántas horas nos quedan para no perder la racha. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e25.jpg',
+      speaker: 'Lili',
+      dialogue: 'Cuando terminemos el desafío podemos ver que subirá la racha (una vez por día)'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e26.jpg',
+      speaker: 'Lili',
+      dialogue: 'y podemos visitar "Mi colección" para ver cuáles caracteres subieron de nivel, cuáles hemos perdido y los nuevos añadidos que hemos aprendido.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e13.jpg',
+      speaker: 'Lili',
+      dialogue: 'Podemos hacer los desafíos las veces que queramos. Siempre subirá de nivel nuestros caracteres.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e13.jpg',
+      speaker: 'Lili',
+      dialogue: 'Aunque también tengamos chance de perderlos. Y recuerda, la racha solo subirá una vez por día.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e27.jpg',
+      speaker: 'Lili',
+      dialogue: 'Cuando hagamos desafíos podemos elegir el desafío clásico, que toma 10 al azar de toda nuestra colección.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e27.jpg',
+      speaker: 'Lili',
+      dialogue: 'Pero también está el desafío 0 a 1, y el desafío +2.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e27.jpg',
+      speaker: 'Lili',
+      dialogue: 'El desafío 0 a 1, toma 10 caracteres al azar que tengan nivel 0 o nivel 1. Así podemos subir de nivel palabras nuevas.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e27.jpg',
+      speaker: 'Lili',
+      dialogue: 'El desafío 2+, toma 10 caracteres al azar que tengan nivel 2 o más, para subir de nivel caracteres más fuertes.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e27.jpg',
+      speaker: 'Lili',
+      dialogue: 'Esa es la manera de subir de nivel los caracteres y de subir el nivel de rachas. Haciendo los desafíos.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e27.jpg',
+      speaker: 'Lili',
+      dialogue: 'Nos da mucha recompensa pero también nos castiga si nos confiamos mucho.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e28.jpg',
+      speaker: 'Lili',
+      dialogue: 'Por eso debes practicar recordar estos caracteres en tu mundo. Así cuando ingreses al nuestro, estés preparado.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e29.jpg',
+      speaker: 'Lili',
+      dialogue: 'Ya solo nos queda un aspecto importante, y es tu nivel personal. Que en chino se dice 水平 (shui ping). '
+    },
+
+    {
+      character: null,
+      position: 'center',
+      background: 'e29.jpg',
+      speaker: 'Lili',
+      dialogue: 'Para subir tu nivel personal debes ganar xp (puntos de experiencia) que es muy sencillo!'
+    },
+
+  ],
+  chapter4: [
+
+    {
+      character: null,
+      position: 'center',
+      background: 'e30.jpg',
+      speaker: 'Lili',
+      dialogue: 'Cada acierto que hagas, sin importar el modo, sea aprendiendo, practicándolos, o en desafíos sumará 1 xp.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e7.jpg',
+      speaker: 'Lili',
+      dialogue: 'Siempre y cuando estés respondiendo el múltiple choice. No sumará xp si estás en modo flashcards.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e31.jpg',
+      speaker: 'Lili',
+      dialogue: 'Recuerden que en las unidades, o los botones de práctica (naranja) podemos elegir el modo Quiz.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e32.jpg',
+      speaker: 'Lili',
+      dialogue: 'El modo Quiz Pinyin, nos mostrará el caracter y tendremos que elegir el pinyin correcto.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e33.jpg',
+      speaker: 'Lili',
+      dialogue: 'El modo Quiz Trad, nos mostrará el caracter y tendremos que elegir la traducción correcta.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e34.jpg',
+      speaker: 'Lili',
+      dialogue: 'El modo Quiz Hanzi, nos mostrará pinyin o traducción y tendremos que elegir el caracter correcto.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e35.jpg',
+      speaker: 'Lili',
+      dialogue: 'Arriba de la barra nos marca cuántos aciertos nos faltan para subir de 水平. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e35.jpg',
+      speaker: 'Lili',
+      dialogue: 'Cada vez será más difícil llegar al siguiente 水平. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e35.jpg',
+      speaker: 'Lili',
+      dialogue: 'Nuestro nivel de 水平 será muy importante para sumar puntos y enfrentar a la Emperatriz. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e28.jpg',
+      speaker: 'Lili',
+      dialogue: 'Bien, ahora que hemos visto cómo coleccionar caracteres, cómo subirlos de nivel, subir la racha y subir el 水平. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e36.jpg',
+      speaker: 'Lili',
+      dialogue: 'Hay algo llamado nuestro Puntaje Total que es la combinación de todos nuestros esfuerzos. Podemos verlo en Logros'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e37.jpg',
+      speaker: 'Lili',
+      dialogue: 'Cada caracter en "Mi Colección" suma 1 punto. Si lo perdemos, no sumará más puntos.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e37.jpg',
+      speaker: 'Lili',
+      dialogue: 'Cada nivel que tenga, sumará 1 punto extra. Si un caracter tiene nivel 1, sumará 1 punto extra. Si tiene nivel 5, sumará 5 puntos extras.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e37.jpg',
+      speaker: 'Lili',
+      dialogue: '¿Y cuál es la importancia de las rachas y 水平?  Mucha, ya que son multiplicadores.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e38.jpg',
+      speaker: 'Lili',
+      dialogue: 'Las rachas multiplicarán 1% nuestro puntaje total. Si tenemos 5 rachas, nuestro puntaje total se incrementa en un 5%. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e38.jpg',
+      speaker: 'Lili',
+      dialogue: 'Recuerda que podemos perder toda la racha si no hacemos un desafío en 24 horas. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e38.jpg',
+      speaker: 'Lili',
+      dialogue: 'El 水平 multiplicará 5% nuestro puntaje total. Si tenemos 水平 de nivel 3, nuestro puntaje total se incrementa en 15%.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e38.jpg',
+      speaker: 'Lili',
+      dialogue: 'El 水平 no se puede perder, solo incrementa cada vez que acertamos un multiple choice. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e37.jpg',
+      speaker: 'Lili',
+      dialogue: 'Y así es como sumaremos puntos. Mientrás más niveles, más daño haremos a la Emperatriz y sus guardianes'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e39.jpg',
+      speaker: 'Lili',
+      dialogue: 'Además hay un portal que nos muestra cómo le está yendo a otros estudiantes de Maca y Manu de otras dimensiones. Siempre verás tu ranking global. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e40.jpg',
+      speaker: 'Lili',
+      dialogue: 'Además puedes filtrar este Leaderboard por país o por grupo. N1, son los estudiantes de Nivel 1 de Maca. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e41.jpg',
+      speaker: 'Lili',
+      dialogue: 'Este lo puedes cambiar cuando quieras, por ejemplo cuando pases a un Nivel más alto y así poder compararte con estudiante de tu nivel. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e42.jpg',
+      speaker: 'Lili',
+      dialogue: 'Y también está este botón “Mi contexto” para ver quiénes son los 5 que están por encima nuestro y los 5 que están debajo nuestro. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e39.jpg',
+      speaker: 'Lili',
+      dialogue: 'Hagamos quedar bien nuestro mundo y subamos ese ranking! '
+    },
+
+  ],
+    chapter5: [
+
+    {
+      character: null,
+      position: 'center',
+      background: 'e2.jpg',
+      speaker: 'Lili',
+      dialogue: 'Como puedes ver, solo podrás acceder a las unidades del nivel 1.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e43.jpg',
+      speaker: 'Lili',
+      dialogue: 'Las otras unidades, el botón de 12 del horóscopo y Desafío Historia están bloqueados hasta que completes ciertos requisitos. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e2.jpg',
+      speaker: 'Lili',
+      dialogue: 'En el nivel 1, tendrás todos los caracteres que habían en este continente que pude encontrar. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e44.jpg',
+      speaker: 'Lili',
+      dialogue: 'En total hay 3 continentes. En el tercero se encuentra la Emperatriz y los animales del horóscopo protegiéndola. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e3.jpg',
+      speaker: 'Lili',
+      dialogue: 'Para poder cruzar al siguiente continente tienes que completar 2 cosas. Primero el Desafío N1, que se encuentra abajo de las unidades. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e45.jpg',
+      speaker: 'Lili',
+      dialogue: 'Y luego el Desafío Cruzar el Mar que se encuentra en Desafío Historia. Pero primero hagamos el Desafío N1. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e3.jpg',
+      speaker: 'Lili',
+      dialogue: 'Este desafío consiste en 20 flashcards al azar de todo el Nivel 1.  '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e46.jpg',
+      speaker: 'Lili',
+      dialogue: 'Los aciertos te subirán de nivel los caracteres y los errores harán que los pierdas.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e46.jpg',
+      speaker: 'Lili',
+      dialogue: 'Además tienes 2 minutos y 3 oportunidades de error para terminar el desafío. Si no lo terminas no hay castigo extra. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e46.jpg',
+      speaker: 'Lili',
+      dialogue: 'Pero para desbloquear el siguiente nivel necesitas terminarlo a tiempo. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e47.jpg',
+      speaker: 'Lili',
+      dialogue: 'Una vez aprobado, se desbloqueará el Cruzar el Mar, el primer jefe que enfrentaremos. Una vez que la derrotemos desbloquearemos el Nivel 2'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e48.jpg',
+      speaker: 'Lili',
+      dialogue: 'Este es el desafío definitivo del Nivel 1. Tenemos que prepararnos, tener la mayor cantidad de caracteres, con niveles altos ya que harán más daño.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e49.jpg',
+      speaker: 'Lili',
+      dialogue: 'El objetivo es derrotarlo antes que se termine el tiempo. Tenemos 3 vidas. Cada error hará que perdamos un caracter al azar de la colección.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e51.jpg',
+      speaker: 'Lili',
+      dialogue: 'Acá veremos el daño que haremos si respondemos bien. Mientras más nivel, más daño haremos.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e50.jpg',
+      speaker: 'Lili',
+      dialogue: 'Habrá diferentes tarjetas ademas de las que conocemos. Hay tarjetas que nos darán más tiempo, más daño, pero también otras que nos restan daño, o incluso curar al jefe.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e52.jpg',
+      speaker: 'Lili',
+      dialogue: 'Cada 5 tarjetas tendremos Mejoras. Son al azar y podemos elegir entre 3 opciones. Algunas son de tiempo, otras de daño y otras donde intercambiamos recursos'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e52.jpg',
+      speaker: 'Lili',
+      dialogue: 'Cada 5 tarjetas tendremos Mejoras. Son al azar y podemos elegir entre 3 opciones. Algunas son de tiempo, otras de daño y otras donde intercambiamos recursos'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e53.jpg',
+      speaker: 'Lili',
+      dialogue: 'Pero no todo es bueno, cada 20 tarjetas el jefe atacará y tendremos que elegir un castigo. Son al azar entre 3 opciones. Nos puede restar daño, vidas, curarse o sacar tiempo.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e54.jpg',
+      speaker: 'Lili',
+      dialogue: 'Lili nos acompañará, ayudandonos a eliminar dos opciones. Solo podrá hacerlo 3 veces.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e55.jpg',
+      speaker: 'Lili',
+      dialogue: 'Asi que elige bien, que Mejoras y Castigos tomarás. Prepara tus caracteres y niveles y domina el Nivel 1! Una vez la derrotes desbloquearás el Nivel 2.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e55.jpg',
+      speaker: 'Lili',
+      dialogue: 'Haremos lo mismo para desbloquear el nivel 3. Primero aprender los caracteres, luego hacer el Desafío N2. Subir de nivel todo lo que podamos y cuando estemos listos hacer el Desafío Cruzar el Cielo.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e56.jpg',
+      speaker: 'Lili',
+      dialogue: 'Luego de Cruzar el Cielo, desbloquearemos el botón de los 12 animales del horóscopo. Al completarlo nos enfrentaremos al Desafío de la Bestia y finalmente a la Emperatriz.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e28.jpg',
+      speaker: 'Lili',
+      dialogue: '¿Estás listo? ¡Repasemos rápidamente para refrescar antes de empezar!'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e1.jpg',
+      speaker: 'Lili',
+      dialogue: 'Coleccionaremos caracteres aquí para sumarlos a la colección.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e1.jpg',
+      speaker: 'Lili',
+      dialogue: 'Ojo! si te equivocas en este modo, y ya lo tenías en tu colección perderás el caracter. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e57.jpg',
+      speaker: 'Lili',
+      dialogue: 'Los botones naranjas son para practicar, acá si te equivocas No pierdes el caracter, pero si se suma a la caja “Repasar” y “Confirmar” para repasarlos bien.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e13.jpg',
+      speaker: 'Lili',
+      dialogue: 'La única forma de subir la racha y el nivel de caracteres es haciendo desafíos. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e29.jpg',
+      speaker: 'Lili',
+      dialogue: 'La forma de subir tu 水平 es respondiendo correctamente. Siempre sumarás a menos que estés en flashcard básica. Tienes que elegir el Modo Quiz, o hacer desafíos. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e36.jpg',
+      speaker: 'Lili',
+      dialogue: 'Aquí en este botón verás tus estadísticas, tu puntaje total, y los logros que has completado.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e36.jpg',
+      speaker: 'Lili',
+      dialogue: 'Todos tus logros quedarán guardados. Maca y Manu están haciendo un gran esfuerzo en mantener este portal a este mundo abierto.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'e58.jpg',
+      speaker: 'Lili',
+      dialogue: 'También está este botón para darle apoyo a Maca y Manu por ayudarnos a salvar este mundo'
+    },
+    {
+      character: 'lili14.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'y hacerte crecer como estudiante. Puedes donar lo que desees para apoyarlos y mantener este portal abierto que conecta nuestros mundos.'
+    },
+    {
+      character: 'lili2.webp',
+      position: 'center',
+      background: 'campfireok.webp',
+      speaker: 'Lili',
+      dialogue: 'Puedes empezar! con la unidad 1, Nivel 1. Junta tus primeros 10 caracteres y hacer tu primer Desafío para subirlos de nivel.'
+    },
+    
+  ],
+  
+  // Capítulo 2: Cruzar el Mar
+  chapter6: [
+    {
+      character: 'lili2.webp',
+      position: 'center',
+      background: 'orilla.webp',
+      speaker: 'Lili',
+      dialogue: '¡Lo hemos logrado {username}! Hemos llegado a la orilla de este continente. Cruzando el mar nos espera el segundo continente.'
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'orilla.webp',
+      speaker: 'Lili',
+      dialogue: 'Pero para llegar allí no será fácil. La Emperatriz ha puesto guardianes en cada continente para evitar que avancemos.'
+    },
+    {
+      character: 'lili7.webp',
+      position: 'center',
+      background: 'orilla.webp',
+      speaker: 'Lili',
+      dialogue: 'La mayoría de los que intentaron apenas pudieron cruzar el mar.'
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'orilla.webp',
+      speaker: 'Lili',
+      dialogue: 'Pero esta vez es diferente. Te tenemos a ti, {username}, y juntos lo lograremos.'
+    },
+    {
+      character: 'lili1.webp',
+      position: 'center',
+      background: 'orilla.webp',
+      speaker: 'Lili',
+      dialogue: 'Usaremos todas nuestras habilidades, cada caracter y su nivel cuentan para enfrentarla.'
+    },
+    {
+      character: 'lili16.webp',
+      position: 'center',
+      background: 'orilla.webp',
+      speaker: 'Lili',
+      dialogue: 'Te ayudaré con mis poderes. Cada 5 tarjetas, podré potenciar tu <span class="text-red-500">poder</span> o darte <span class="text-sky-400">tiempo extra</span>.'
+    },
+    {
+      character: 'lili2.webp',
+      position: 'center',
+      background: 'orilla.webp',
+      speaker: 'Lili',
+      dialogue: 'Si sientes que estamos listos, ¡Crucemos el mar!'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'orilla.webp',
+      speaker: 'Narrador',
+      dialogue: '(Puedes elegir el desafío Cruzar el Mar o seguir subiendo de nivel tus caracteres, rachas y 水平）'
+    }
+  ],
+  
+  // Capítulo 3: El Segundo Continente
+  chapter7: [
+    {
+      character: 'lili2.webp',
+      position: 'center',
+      background: 'island.webp',
+      speaker: 'Lili',
+      dialogue: 'Lo hemos logrado! Después de todo sí eres nuestra salvación {username}.'
+    },
+    {
+      character: 'lili2.webp',
+      position: 'center',
+      background: 'island.webp',
+      speaker: 'Lili',
+      dialogue: 'Hemos llegado al segundo continente. Acá podremos encontrar más caracteres para aumentar nuestro conocimiento.'
+    },
+    {
+      character: 'lili15.webp',
+      position: 'center',
+      background: 'island.webp',
+      speaker: 'Lili',
+      dialogue: 'Y recuerda el conocimiento es poder. Quien diría que aprender chino podría salvar el mundo.'
+    },
+    {
+      character: 'lili16.webp',
+      position: 'center',
+      background: 'island.webp',
+      speaker: 'Lili',
+      dialogue: 'Ánimo, estamos cada vez más cerca de la emperatriz. Juntemos conocimiento y crucemos este continente.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'island.webp',
+      speaker: 'Narrador',
+      dialogue: '(Has desbloqueado el Nivel 2. Realiza el Desafío Nivel 2 para desbloquear la siguiente parte en Modo Historia）'
+    }
+  ],
+  
+  // Capítulo 4: Cruzar el cielo
+  chapter8: [
+    {
+      character: 'lili5.webp',
+      position: 'center',
+      background: 'crosscielo.webp',
+      speaker: 'Lili',
+      dialogue: 'Al parecer el único camino hacia el tercer continente es cruzando el cielo.'
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'crosscielo.webp',
+      speaker: 'Lili',
+      dialogue: 'Prepárate, este será el desafío más difícil al que nos hemos enfrentado.'
+    },
+    {
+      character: 'lili13.webp',
+      position: 'center',
+      background: 'crosscielo.webp',
+      speaker: 'Lili',
+      dialogue: 'Confía en tu poder, en tu conocimiento, confía en mí y mi ayuda. Podemos lograrlo.'
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'crosscielo.webp',
+      speaker: 'Lili',
+      dialogue: '¿Estás listo para Cruzar el Cielo?'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'crosscielo.webp',
+      speaker: 'Narrador',
+      dialogue: '(Puedes elegir el desafío Cruzar el Cielo o seguir subiendo de nivel tus caracteres, rachas y 水平）'
+    }
+  ],
+  
+  // Capítulo 5: El tercer continente
+  chapter9: [
+    {
+      character: 'lilithumbs.webp',
+      position: 'center',
+      background: 'tercercontinente.webp',
+      speaker: 'Lili',
+      dialogue: '¡Eso es! ¡Estuviste increíble {username}! '
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'tercercontinente.webp',
+      speaker: 'Lili',
+      dialogue: 'Aquí estamos, en el tercer continente. Allí está la emperatriz con los doce animales. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'tercercontinente.webp',
+      speaker: 'Lili',
+      dialogue: 'Ellos eran nuestros protectores. Pero han caído bajo el control de la emperatriz cuando fueron a enfrentarla. '
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'tercercontinente.webp',
+      speaker: 'Lili',
+      dialogue: 'La rata, el gallo, el conejo, el cerdo, el perro, el caballo, el buey, la cabra, la serpiente, el mono, el tigre y el dragón. '
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'tercercontinente.webp',
+      speaker: 'Lili',
+      dialogue: 'Estoy segura de que cuando esto termine podremos liberarlos de su control. '
+    },
+    {
+      character: 'lili5.webp',
+      position: 'center',
+      background: 'tercercontinente.webp',
+      speaker: 'Lili',
+      dialogue: 'Pero antes juntemos más conocimiento. En este continente encontraremos caracteres que formaban parte de los animales. '
+    },
+    {
+      character: 'lili2.webp',
+      position: 'center',
+      background: 'tercercontinente.webp',
+      speaker: 'Lili',
+      dialogue: 'Los usaremos para poder derrotarlos uno por uno y llegar a la emperatriz.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'tercercontinente.webp',
+      speaker: 'Narrador',
+      dialogue: '(Has desbloqueado el Nivel 3 y los Animales del Horóscopo. Realiza los 12 desafíos del Horóscopo para desbloquear la siguiente parte en Modo Historia） '
+    }
+  ],
+  // Capítulo 6: Bestia
+  chapter10: [
+    {
+      character: 'liliweak.webp',
+      position: 'center',
+      background: 'cielo.webp',
+      speaker: 'Lili',
+      dialogue: 'Enfrentar a los animales ha sido muy difícil. '
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'cielo.webp',
+      speaker: 'Lili',
+      dialogue: 'Pero hay algo raro…'
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'cielo.webp',
+      speaker: 'Lili',
+      dialogue: 'El dragón al que enfrentamos…no era…'
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'cielo.webp',
+      speaker: 'Lili',
+      dialogue: 'No era tan poderoso como el dragón que conozco.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'cielo.webp',
+      speaker: 'Narrador',
+      dialogue: '(El piso tiembla)'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'dragon.webp',
+      speaker: 'Dragón',
+      dialogue: 'ROOOOARRRRR'
+    },
+    {
+      character: 'lili15.webp',
+      position: 'center',
+      background: 'dragon.webp',
+      speaker: 'Lili',
+      dialogue: '¡Ah! Ahí está. ¿Estás listo para enfrentar al animal más poderoso del horóscopo?'
+    },
+    {
+      character: 'lili2.webp',
+      position: 'center',
+      background: 'bestias12modal.webp',
+      speaker: 'Lili',
+      dialogue: '{username}, confío en ti. Pasando al dragón, podremos llegar a la emperatriz.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'bestias12modal.webp',
+      speaker: 'Narrador',
+      dialogue: '(Puedes elegir el desafío Bestias o seguir subiendo de nivel tus caracteres, rachas y 水平）'
+    }
+
+  ],
+  // Capítulo 7: La Emperatriz
+  chapter11: [
+    {
+      character: 'liliweak.webp',
+      position: 'center',
+      background: 'templo.webp',
+      speaker: 'Lili',
+      dialogue: '¡Eso estuvo cerca! Ese ha sido el último de los guardianes. '
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'templo.webp',
+      speaker: 'Lili',
+      dialogue: 'Allí está ella. La Emperatriz.'
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'templo.webp',
+      speaker: 'Lili',
+      dialogue: 'Tanto esfuerzo hemos hecho para llegar hasta este momento. '
+    },
+    {
+      character: 'lili15.webp',
+      position: 'center',
+      background: 'templo.webp',
+      speaker: 'Lili',
+      dialogue: 'Has crecido mucho desde que nos conocimos. Y me alegra mucho que hayas decidido ayudarnos.'
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'templo.webp',
+      speaker: 'Lili',
+      dialogue: 'Para esto nos preparamos, para esto miles de héroes han dado su vida. '
+    },
+    {
+      character: 'lili2.webp',
+      position: 'center',
+      background: 'templo.webp',
+      speaker: 'Lili',
+      dialogue: 'Estoy segura de que lo lograremos. Confía en tu conocimiento, en todo el camino que hiciste para llegar hasta aquí. '
+    },
+    {
+      character: 'lili2.webp',
+      position: 'center',
+      background: 'templo.webp',
+      speaker: 'Lili',
+      dialogue: '{username}, podemos lograrlo. Liberemos este mundo de la tiranía de la Emperatriz.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'empok.webp',
+      speaker: 'Emperatriz',
+      dialogue: 'Lili, {username} llegaron lejos, pero es tiempo de que se regresen.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'empok.webp',
+      speaker: 'Emperatriz',
+      dialogue: 'No es lugar para débiles. Vayanse antes de que cambie de opinión.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'empok.webp',
+      speaker: 'Emperatriz',
+      dialogue: 'Esta es mi última advertencia.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'templo.webp',
+      speaker: 'Narrador',
+      dialogue: '(Puedes elegir el desafío La Emperatriz o seguir subiendo de nivel tus caracteres, rachas y 水平）'
+    }
+
+  ],
+  // Capítulo 8: Un nuevo Mundo
+  chapter12: [
+    {
+      character: null,
+      position: 'center',
+      background: 'emperatrizdefeat.webp',
+      speaker: 'Emperatriz',
+      dialogue: 'Al parecer mi poder no fue lo suficiente para detenerlos...'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'emperatrizdefeat.webp',
+      speaker: 'Emperatriz',
+      dialogue: 'quería ser más fuerte... quería hacerlos más fuertes... me quedé sin tiempo.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'emperatrizdefeat.webp',
+      speaker: 'Emperatriz',
+      dialogue: 'Sin embargo encontré alguien que podrá lograr lo que yo no pude...'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'vanish.webp',
+      speaker: 'Emperatriz',
+      dialogue: 'Ustedes.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'vanish.webp',
+      speaker: 'Narrador',
+      dialogue: '(La Emperatriz se desvanece).'
+    },
+    {
+      character: 'lili15.webp',
+      position: 'center',
+      background: 'fondosin.webp',
+      speaker: 'Lili',
+      dialogue: 'Se ha ido... lo ... ¿lo logramos?'
+    },
+    {
+      character: 'lili14.webp',
+      position: 'center',
+      background: 'fondosin.webp',
+      speaker: 'Lili',
+      dialogue: '¡Si, lo logramos {username}! ¡Lo logramos!'
+    },
+    {
+      character: 'lili15.webp',
+      position: 'center',
+      background: 'fondosin.webp',
+      speaker: 'Lili',
+      dialogue: 'Al parecer aprender chino ha sido nuestra salvación'
+    },
+    {
+      character: 'lili15.webp',
+      position: 'center',
+      background: 'fondosin.webp',
+      speaker: 'Lili',
+      dialogue: 'No podemos estar más agradecidos contigo {username}. Gracias por venir y restaurar este mundo.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'backk.webp',
+      speaker: 'Lili',
+      dialogue: 'AAAAGHH!!! ¿Qué está pasando?'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'wukongback.webp',
+      speaker: 'Wukong',
+      dialogue: 'En verdad creyeron...'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'wukongback.webp',
+      speaker: 'Wukong',
+      dialogue: 'que la Emperatriz era la verdadera villana...'
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'nowukong.webp',
+      speaker: 'Lili',
+      dialogue: '¿De qué estás hablando Wukong?'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'wukongback.webp',
+      speaker: 'Wukong',
+      dialogue: 'Pequeños ilusos. La Emperatriz estaba usando su poder para protegerlos.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'wukongback.webp',
+      speaker: 'Wukong',
+      dialogue: 'En lo alto de las montañas estaba conteniendonos a nosotros.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'wukongback.webp',
+      speaker: 'Wukong',
+      dialogue: 'Pero con el tiempo su poder fue debilitándose y por eso juntó a los animales del horóscopo para que la ayudaran.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'wukongback.webp',
+      speaker: 'Wukong',
+      dialogue: 'Ayudarla a contenernos... y preservar este mundo que se estaba destruyendo.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'wukongback.webp',
+      speaker: 'Wukong',
+      dialogue: 'Ella no causó la destrucción, ella estaba tratando de salvarlos.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'wukongback.webp',
+      speaker: 'Wukong',
+      dialogue: 'Nosotros fuimos los causantes de acabar con los guerreros y expediciones. Pero ustedes con sus truquitos de los caracteres'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'wukongback.webp',
+      speaker: 'Wukong',
+      dialogue: 'Me sorprendieron. Nunca pensé que alguien pudiera aprender tanto en tan poco tiempo.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'wukongback.webp',
+      speaker: 'Wukong',
+      dialogue: 'Ahora que la Emperatriz ha caído, nosotros retomaremos el control de este mundo.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'wukongback.webp',
+      speaker: 'Wukong',
+      dialogue: 'Empezaré acabando con ustedes dos.'
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'wukongback.webp',
+      speaker: 'Lili',
+      dialogue: '¡Espera! A ti te gustan los desafíos ¿verdad?'
+    },
+    {
+      character: 'lili6.webp',
+      position: 'center',
+      background: 'wukongback.webp',
+      speaker: 'Lili',
+      dialogue: 'Danos un tiempo, y te daremos una verdadera batalla de conocimientos.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'wukongback.webp',
+      speaker: 'Wukong',
+      dialogue: 'Interesante... ¿tu qué opinas mi amigo?'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'nezhaalone.webp',
+      speaker: 'Nezha',
+      dialogue: 'Yo digo que les demos un poco de tiempo. Después de todo, han derrotado a la Emperatriz.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'nezhaalone.webp',
+      speaker: 'Nezha',
+      dialogue: 'Esto debería ser divertido.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'wukong y nezha.webp',
+      speaker: 'Wukong',
+      dialogue: 'Bien, váyanse. Vuelvan más fuertes la próxima vez. No me decepcionen.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'wukong y nezha.webp',
+      speaker: 'Wukong',
+      dialogue: 'Tengo otros asuntos celestiales más importantes que atender.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: null,
+      speaker: 'Narrador',
+      dialogue: 'Lili y {username} emprendieron un viaje hacia un lugar seguro.'
+    },
+    {
+      character: 'lili2.webp',
+      position: 'center',
+      background: 'explore2.webp',
+      speaker: 'Lili',
+      dialogue: '{username}, Vamonos, tengo un lugar que mostrarte.'
+    },
+    {
+      character: 'lili2.webp',
+      position: 'center',
+      background: 'explore2.webp',
+      speaker: 'Lili',
+      dialogue: 'Lo he estado guardando para ti. La profecía dice que cuando el héroe pareciera perdido, que le mostrara el camino del lugar más sagrado.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'library.jpg',
+      speaker: 'Lili',
+      dialogue: 'Aquí estamos. Este es el Templo del Conocimiento. Aquí encontré a Maca y Manu.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: 'library.jpg',
+      speaker: 'Lili',
+      dialogue: 'y aquí se encuentran los conocimientos del HSK3 y HSK4. ¿Estás preparado?'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: null,
+      speaker: 'Manu y Maca',
+      dialogue: '¡Felicidades! Has completado el Modo Historia. Pero nuestra aventura no termina aquí.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: null,
+      speaker: 'Manu y Maca',
+      dialogue: 'Puedes adquirir el paquete de HSK3 y HSK4 para seguir aprendiendo y ayudándonos a seguir desarrollando y manteniendo el juego.'
+    },
+    {
+      character: null,
+      position: 'center',
+      background: null,
+      speaker: 'Manu y Maca',
+      dialogue: 'Puedes ponerte en contacto con nosotros Maca y Manu para adquirir el código de activación. ¡Gracias por apoyarnos!'
+    },
+  ]
+  
+};
+
+// Variables globales para el sistema de historia
+window.currentStoryData = null;
+window.currentSceneIndex = 0;
+
+// Inyectar estilos pixel retro en el documento padre si no existen
+function ensureStoryPixelStyles(targetDoc) {
+  // Asegurar fuente Jersey 10 en documento padre
+  if (!targetDoc.getElementById('jersey10FontLink')) {
+    const link = targetDoc.createElement('link');
+    link.id = 'jersey10FontLink';
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Jersey+10:wght@400&display=swap';
+    targetDoc.head.appendChild(link);
+  }
+  if (targetDoc.getElementById('storyPixelStyles')) return;
+  const style = targetDoc.createElement('style');
+  style.id = 'storyPixelStyles';
+  style.textContent = `
+    .jersey-font-niveles { font-family: 'Jersey 10', monospace; }
+    .pixel-overlay { background: rgba(0,0,0,0.8); backdrop-filter: blur(3px); }
+    .pixel-panel {
+      background: linear-gradient(135deg, #1e3a8a, #1e293b);
+      color: #fff;
+      border: 4px solid #3b82f6; /* blue-500 */
+      border-radius: 18px;
+      box-shadow:
+        0 0 0 2px #000 inset,
+        0 6px 0 0 #0008,
+        0 12px 24px rgba(59, 130, 246, 0.35);
+      image-rendering: pixelated;
+    }
+    .pixel-title {
+      color: #a78bfa; /* violet-300 */
+      text-shadow: 2px 2px 0 #000, 0 0 10px rgba(167,139,250,0.6);
+      letter-spacing: 1px;
+    }
+    .pixel-button {
+      display: block;
+      width: 100%;
+      padding: 8px 8px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: #fff;
+      /* Borde estilo "botón real" con base más gruesa */
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-bottom-width: 6px;
+      border-radius: 12px;
+      font-weight: 700;
+      transition: transform 0.12s ease, filter 0.2s ease, border-bottom-width 0.12s ease;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+    .pixel-button:hover {
+      background: rgba(255, 255, 255, 0.2);
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+    .pixel-button:active {
+      /* Presionado: bajar y achicar base para efecto de clic real */
+      transform: translateY(2px);
+      border-bottom-width: 3px;
+    }
+    .pixel-button:focus-visible { outline: 3px solid rgba(255,255,255,0.3); outline-offset: 2px; }
+    .pixel-button.alt {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: #fff;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-bottom-width: 6px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+    .pixel-button.alt:hover {
+      background: rgba(255, 255, 255, 0.2);
+      filter: brightness(1.1);
+    }
+    .pixel-button.green {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: #fff;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-bottom-width: 6px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+    .pixel-button.green:hover {
+      background: rgba(255, 255, 255, 0.2);
+      filter: brightness(1.1);
+    }
+    .pixel-button.challenge {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: #fff;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-bottom-width: 6px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+    .pixel-button.challenge:hover {
+      background: rgba(255, 255, 255, 0.2);
+      filter: brightness(1.1);
+    }
+    .pixel-close {
+      background: rgba(107, 114, 128, 0.3);
+      backdrop-filter: blur(10px);
+      color: #fff;
+      border: 2px solid #6b7280;
+      border-bottom-width: 6px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+    .pixel-close:hover {
+      background: rgba(107, 114, 128, 0.4);
+      filter: brightness(1.1);
+    }
+    .pixel-list { display: grid; gap: 10px; }
+    
+    /* Barra de progreso */
+    .story-progress-bar {
+      width: 100%;
+      height: 18px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 2px solid #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 0 rgba(0,0,0,0.35), inset 0 1px 2px rgba(0,0,0,0.5);
+    }
+    .story-progress-cell {
+      flex: 1;
+      background: rgba(75, 85, 99, 0.3);
+      border-right: 2px solid rgba(167, 139, 250, 0.3);
+      position: relative;
+      transition: all 0.4s ease;
+    }
+    .story-progress-cell:last-child {
+      border-right: none;
+    }
+    .story-progress-cell.completed {
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+      box-shadow: inset 0 0 10px rgba(34, 197, 94, 0.6);
+      animation: cellComplete 0.5s ease;
+    }
+    @keyframes cellComplete {
+      0% { transform: scaleY(0); }
+      50% { transform: scaleY(1.1); }
+      100% { transform: scaleY(1); }
+    }
+    .story-progress-text {
+      text-align: center;
+      font-size: 14px;
+      color: #ffffff;
+      margin-bottom: 8px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+      font-weight: 700;
+    }
+    
+    /* Media query para desktop: limitar ancho de modales a proporción móvil */
+    @media (min-width: 768px) {
+      /* Modal de capítulos - máximo 480px (proporción móvil) */
+      #chapterModal .pixel-panel {
+        max-width: 480px !important;
+      }
+      
+      /* Modal de slides - máximo 500px ancho, altura controlada */
+      #storyModal .story-container {
+        max-width: 500px !important;
+        margin: 0 auto;
+      }
+    }
+  `;
+  targetDoc.head.appendChild(style);
+}
+
+// Función para mostrar el modal de capítulos (global para acceso desde HTML)
+window.showChapterModal = async function() {
+  console.log('🎭 DEBUG: Mostrando modal de capítulos');
+  
+  // Usar el documento padre para crear elementos
+  const targetDoc = (window.parent && window.parent.document) ? window.parent.document : document;
+  const parentDoc = window.parent.document || document;
+  
+  // ✨ MOSTRAR MODAL INMEDIATAMENTE con loading
+  ensureStoryPixelStyles(targetDoc);
+  const modal = targetDoc.createElement('div');
+  modal.id = 'chapterModal';
+  modal.className = 'fixed inset-0 z-[99999] pixel-overlay flex items-center justify-center p-4';
+  
+  const content = targetDoc.createElement('div');
+  content.className = 'pixel-panel jersey-font-niveles p-6 sm:p-8 max-w-md w-full text-center';
+  content.style.maxHeight = '85vh';
+  content.style.overflowY = 'auto';
+  content.style.position = 'relative';
+  
+  // Mostrar loading inicial
+  content.innerHTML = `
+    <button onclick="window.closeStoryModal()" class="absolute top-2 right-2 w-8 h-8 flex items-center justify-center text-black text-4xl transition-all duration-200 z-50 jersey-font-niveles hover:scale-110" style="background: rgba(128, 128, 128, 0.8); border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 6px; line-height: 1;" title="Cerrar">×</button>
+    <div class="text-white text-2xl flex items-center justify-center gap-4 py-20" style="text-shadow:1px 1px 0 #000">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2" style="border-color:#a78bfa"></div>
+      Cargando historia...
+    </div>
+  `;
+  
+  modal.appendChild(content);
+  targetDoc.body.appendChild(modal);
+  
+  // ✨ AHORA CARGAR PROGRESO EN SEGUNDO PLANO
+  let storyProgress = {
+    chapter1: false,
+    chapter6: false,
+    chapter7: false,
+    chapter8: false,
+    chapter9: false
+  };
+  
+  let challengesCompleted = {
+    cruzarMar: false,
+    cruzarCielo: false,
+    bestias12: false,
+    emperatriz: false
+  };
+  
+  try {
+    const jwtToken = parentDoc.querySelector('script')?.textContent?.match(/let jwtToken = '([^']+)'/)?.[1] || 
+                     localStorage.getItem('jwtToken') || 
+                     (window.parent && window.parent.jwtToken);
+    
+    if (jwtToken) {
+      const API_BASE = (window.parent && window.parent.API_BASE) || 
+                       (window.location.origin.includes('localhost') ? 'http://localhost:4000' : window.location.origin);
+      
+      console.log('🔗 API_BASE usado para cargar progreso:', API_BASE);
+      
+      const response = await fetch(`${API_BASE}/api/user`, {
+        headers: { 'Authorization': jwtToken }
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        storyProgress = userData.storyProgress || storyProgress;
+        challengesCompleted = {
+          cruzarMar: userData.cruzarMarCompleted || false,
+          cruzarCielo: userData.cruzarCieloCompleted || false,
+          bestias12: userData.bestias12Completed || false,
+          emperatriz: userData.emperatrizCompleted || false
+        };
+        console.log('📖 Progreso de historia cargado:', storyProgress);
+        console.log('🏆 Desafíos completados:', challengesCompleted);
+      }
+    }
+  } catch (error) {
+    console.error('Error cargando progreso:', error);
+  }
+  
+  // Obtener animales del horóscopo desde parent
+  const horoscopeAnimals = window.parent.horoscopeAnimalsUnlocked || [];
+  console.log('🐲 DEBUG showChapterModal - horoscopeAnimals:', horoscopeAnimals);
+  console.log('🐲 DEBUG showChapterModal - horoscopeAnimals.length >= 12:', horoscopeAnimals.length >= 12);
+  
+  // Calcular progreso total (13 milestones)
+  const totalMilestones = 13;
+  const completedCount = [
+    storyProgress.chapter1,                   // 1. Capítulo 1 (narrativa)
+    challengesCompleted.cruzarMar,             // 2. Cruzar el Mar
+    storyProgress.chapter6,                   // 3. Capítulo 6 (narrativa)
+    storyProgress.chapter7,                   // 4. Capítulo 7 (narrativa)
+    storyProgress.chapter8,                   // 5. Capítulo 8 (narrativa)
+    challengesCompleted.cruzarCielo,           // 6. Cruzar el Cielo
+    storyProgress.chapter9,                   // 7. Capítulo 9 (narrativa)
+    horoscopeAnimals.length >= 12,            // 8. Meta-milestone: 12 Guardianes
+    storyProgress.chapter10,                  // 9. Capítulo 10 (narrativa)
+    challengesCompleted.bestias12,             // 10. 12 Bestias
+    storyProgress.chapter11,                  // 11. Capítulo 11 (narrativa)
+    challengesCompleted.emperatriz,            // 12. La Emperatriz
+    storyProgress.chapter12                   // 13. Capítulo 12 (narrativa - final)
+  ].filter(Boolean).length;
+  
+  const progressPercentage = Math.round((completedCount / totalMilestones) * 100);
+  
+  // Crear las celdas de progreso
+  let progressCells = '';
+  for (let i = 0; i < totalMilestones; i++) {
+    const isCompleted = i < completedCount ? 'completed' : '';
+    progressCells += `<div class="story-progress-cell ${isCompleted}"></div>`;
+  }
+  
+  // ✨ ACTUALIZAR CONTENIDO DEL MODAL con los datos cargados
+  content.innerHTML = `
+    <!-- Botón X para cerrar (esquina superior derecha) -->
+    <button onclick="window.closeStoryModal()" class="absolute top-2 right-2 w-8 h-8 flex items-center justify-center text-black text-4xl transition-all duration-200 z-50 jersey-font-niveles hover:scale-110" style="background: rgba(128, 128, 128, 0.8); border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 6px; line-height: 1;" title="Cerrar">×</button>
+    
+    <!-- Barra de progreso -->
+    <div class="story-progress-text" style="font-size: 24px;">Modo Historia: ${progressPercentage}% (${completedCount}/${totalMilestones})</div>
+    <div class="story-progress-bar">
+      ${progressCells}
+    </div>
+    
+    <div class="pixel-list">
+      <!-- PARTE 1: Introducción y Tutoriales -->
+      <button onclick="window.startChapter('chapter1')" class="pixel-button jersey-font-niveles">Cap. 1: El Encuentro${storyProgress.chapter1 ? ' ✅' : ''}</button>
+      
+      <!-- Botón Tutorial con dropdown -->
+      <div style="position: relative; margin-bottom: 12px;">
+        <button onclick="toggleTutorialDropdown(event)" class="pixel-button alt jersey-font-niveles" id="tutorialBtn">
+          Cómo jugar ▼
+        </button>
+        <div id="tutorialDropdown" class="hidden" style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 8px; background: linear-gradient(135deg, #1f1147, #0b0f2a); border: 3px solid #14b8a6; border-radius: 12px; padding: 8px; z-index: 9999; box-shadow: 0 8px 16px rgba(0,0,0,0.6), 0 0 20px rgba(20,184,166,0.2);">
+          <button onclick="window.startChapter('chapter2')" class="pixel-button green jersey-font-niveles" style="margin-bottom: 8px;">Tutorial 1: Cómo Funciona</button>
+          <button onclick="window.startChapter('chapter3')" class="pixel-button green jersey-font-niveles" style="margin-bottom: 8px;">Tutorial 2: Fortalecer Colección</button>
+          <button onclick="window.startChapter('chapter4')" class="pixel-button green jersey-font-niveles" style="margin-bottom: 8px;">Tutorial 3: Subir Nivel</button>
+          <button onclick="window.startChapter('chapter5')" class="pixel-button green jersey-font-niveles">Tutorial 4: Desbloquear Continentes</button>
+        </div>
+      </div>
+      
+      <!-- PARTE 2: Cruzar el Mar -->
+      <button onclick="window.startChapter('chapter6')" class="pixel-button jersey-font-niveles">Cap. 2: Cruzar el Mar${storyProgress.chapter6 ? ' ✅' : ''}</button>
+      <button id="btnCruzarMarStory" class="pixel-button challenge cruzar-mar jersey-font-niveles" style="font-size: 0.9em; padding: 10px 18px; margin-top: -4px; margin-bottom: 8px;">🌊 Desafío: Cruzar el Mar${challengesCompleted.cruzarMar ? ' ✅' : ''}</button>
+      <button onclick="window.startChapter('chapter7')" class="pixel-button jersey-font-niveles">Cap. 3: El Segundo Continente${storyProgress.chapter7 ? ' ✅' : ''}</button>
+      
+      <!-- SEPARACIÓN GRANDE -->
+      <div style="height: 24px;"></div>
+      
+      <!-- PARTE 3: Cruzar el Cielo -->
+      <button onclick="window.startChapter('chapter8')" class="pixel-button jersey-font-niveles">Cap. 4: Hacia las Nubes${storyProgress.chapter8 ? ' ✅' : ''}</button>
+      <button id="btnCruzarCieloStory" class="pixel-button challenge cruzar-cielo jersey-font-niveles" style="font-size: 0.9em; padding: 10px 18px; margin-top: -4px; margin-bottom: 8px;">☁️ Desafío: Cruzar el Cielo${challengesCompleted.cruzarCielo ? ' ✅' : ''}</button>
+      
+      <!-- SEPARACIÓN GRANDE -->
+      <div style="height: 24px;"></div>
+      
+      <!-- PARTE 4: Los 12 del Horóscopo -->
+      <button onclick="window.startChapter('chapter9')" class="pixel-button jersey-font-niveles">Cap. 5: Los 12 Guardianes${storyProgress.chapter9 ? ' ✅' : ''}</button>
+      <button id="btnHoroscopeProgressStory" class="pixel-button alt jersey-font-niveles" style="font-size: 0.9em; margin-top: -4px; margin-bottom: 8px;">📊 Progreso 12 Guardianes${horoscopeAnimals.length >= 12 ? ' ✅' : ''}</button>
+      
+      <!-- SEPARACIÓN GRANDE -->
+      <div style="height: 24px;"></div>
+      
+      <!-- PARTE 5: 12 Bestias -->
+      <button onclick="window.startChapter('chapter10')" class="pixel-button jersey-font-niveles">Cap. 6: La Bestia${storyProgress.chapter10 ? ' ✅' : ''}</button>
+      <button id="btnBestias12Story" class="pixel-button challenge bestias12 jersey-font-niveles" style="font-size: 0.9em; padding: 10px 18px; margin-top: -4px; margin-bottom: 8px;">🐲 Desafío: Bestia${challengesCompleted.bestias12 ? ' ✅' : ''}</button>
+      
+      <!-- SEPARACIÓN GRANDE -->
+      <div style="height: 24px;"></div>
+      
+      <!-- PARTE 6: La Emperatriz -->
+      <button onclick="window.startChapter('chapter11')" class="pixel-button jersey-font-niveles">Cap. 7: El monte más alto${storyProgress.chapter11 ? ' ✅' : ''}</button>
+      <button id="btnEmperatrizStory" class="pixel-button challenge emperatriz jersey-font-niveles" style="font-size: 0.9em; padding: 10px 18px; margin-top: -4px; margin-bottom: 8px;">👑 Desafío: La Emperatriz${challengesCompleted.emperatriz ? ' ✅' : ''}</button>
+      <button onclick="window.startChapter('chapter12')" class="pixel-button jersey-font-niveles">Cap. 8: Un nuevo Mundo${storyProgress.chapter12 ? ' ✅' : ''}</button>
+    </div>
+    <div style="height: 10px;"></div>
+    <button onclick="window.closeStoryModal()" class="pixel-button pixel-close jersey-font-niveles" style="width:auto; min-width: 140px;">Cerrar</button>
+  `;
+  
+  modal.appendChild(content);
+  
+  // Agregar script para toggle del dropdown de tutorial y conectar botones de desafío
+  const scriptEl = targetDoc.createElement('script');
+  scriptEl.textContent = `
+    window.toggleTutorialDropdown = function(e) {
+      e.stopPropagation();
+      const dropdown = document.getElementById('tutorialDropdown');
+      dropdown.classList.toggle('hidden');
+    };
+    
+    // Cerrar dropdown al hacer clic fuera
+    document.addEventListener('click', function(e) {
+      const tutorialDropdown = document.getElementById('tutorialDropdown');
+      const tutorialBtn = document.getElementById('tutorialBtn');
+      
+      if (tutorialDropdown && !tutorialDropdown.classList.contains('hidden') && tutorialBtn && !tutorialBtn.contains(e.target)) {
+        tutorialDropdown.classList.add('hidden');
+      }
+    });
+  `;
+  modal.appendChild(scriptEl);
+  
+  // Conectar botones de desafío con las funciones del juego principal
+  // IMPORTANTE: Hacer esto DESPUÉS de agregar el modal al DOM
+  targetDoc.body.appendChild(modal);
+  
+  // Ahora conectar los event listeners
+  setTimeout(() => {
+    const parentDoc = window.parent.document || document;
+    
+    // Cruzar el Mar
+    const btnCruzarMarStory = targetDoc.getElementById('btnCruzarMarStory');
+    if (btnCruzarMarStory) {
+      btnCruzarMarStory.addEventListener('click', function() {
+        const mainBtnCruzarMar = parentDoc.getElementById('btnCruzarMar');
+        if (mainBtnCruzarMar) {
+          window.closeStoryModal();
+          mainBtnCruzarMar.click();
+        }
+      });
+    }
+    
+    // Cruzar el Cielo
+    const btnCruzarCieloStory = targetDoc.getElementById('btnCruzarCieloStory');
+    if (btnCruzarCieloStory) {
+      btnCruzarCieloStory.addEventListener('click', function() {
+        const mainBtnCruzarCielo = parentDoc.getElementById('btnCruzarCielo');
+        if (mainBtnCruzarCielo) {
+          window.closeStoryModal();
+          mainBtnCruzarCielo.click();
+        }
+      });
+    }
+    
+    // Desafío 12 Bestias
+    const btnBestias12Story = targetDoc.getElementById('btnBestias12Story');
+    if (btnBestias12Story) {
+      btnBestias12Story.addEventListener('click', function() {
+        const mainBtnBestias12 = parentDoc.getElementById('btnBestias12');
+        if (mainBtnBestias12) {
+          window.closeStoryModal();
+          mainBtnBestias12.click();
+        }
+      });
+    }
+    
+    // La Emperatriz
+    const btnEmperatrizStory = targetDoc.getElementById('btnEmperatrizStory');
+    if (btnEmperatrizStory) {
+      btnEmperatrizStory.addEventListener('click', function() {
+        const mainBtnEmperatriz = parentDoc.getElementById('btnLaEmperatriz');
+        if (mainBtnEmperatriz) {
+          window.closeStoryModal();
+          mainBtnEmperatriz.click();
+        }
+      });
+    }
+    
+    // Progreso de Los 12 Guardianes
+    const btnHoroscopeProgressStory = targetDoc.getElementById('btnHoroscopeProgressStory');
+    if (btnHoroscopeProgressStory) {
+      btnHoroscopeProgressStory.addEventListener('click', function() {
+        console.log('🐲 Botón Progreso 12 Guardianes clickeado');
+        if (typeof window.showHoroscopeProgress === 'function') {
+          window.showHoroscopeProgress();
+        } else {
+          console.error('❌ window.showHoroscopeProgress no está definida');
+        }
+      });
+    }
+  }, 0);
+  
+  // Event listener para cerrar al hacer clic fuera
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      window.closeStoryModal();
+    }
+  });
+};
+
+// Función para iniciar un capítulo (global para acceso desde HTML)
+window.startChapter = function(chapterId) {
+  console.log('🎭 DEBUG: Iniciando capítulo:', chapterId);
+  
+  window.currentStoryData = window.storyScenes[chapterId];
+  window.currentSceneIndex = 0;
+  window.currentChapterId = chapterId; // Guardar ID del capítulo actual
+  
+  if (!window.currentStoryData) {
+    console.error('🎭 ERROR: Capítulo no encontrado:', chapterId);
+    return;
+  }
+  
+  // Cerrar modal de capítulos
+  const targetDoc = (window.parent && window.parent.document) ? window.parent.document : document;
+  const chapterModal = targetDoc.getElementById('chapterModal');
+  if (chapterModal) {
+    chapterModal.remove();
+  }
+  
+  // Mostrar primera escena
+  window.showStoryScene();
+};
+
+// Función para mostrar escena actual (global para acceso desde HTML)
+window.showStoryScene = function() {
+  if (!window.currentStoryData || window.currentSceneIndex >= window.currentStoryData.length) {
+    console.error('🎭 ERROR: No hay datos de historia o índice fuera de rango');
+    return;
+  }
+  
+  const scene = window.currentStoryData[window.currentSceneIndex];
+  console.log('🎭 DEBUG: Mostrando escena', window.currentSceneIndex + 1, '/', window.currentStoryData.length);
+  console.log('🎭 DEBUG: Datos de la escena:', scene);
+  
+  // Crear o actualizar modal de historia
+  const targetDoc = (window.parent && window.parent.document) ? window.parent.document : document;
+  let modal = targetDoc.getElementById('storyModal');
+  const isFirstScene = window.currentSceneIndex === 0;
+  
+  if (!modal) {
+    ensureStoryPixelStyles(targetDoc);
+    modal = targetDoc.createElement('div');
+    modal.id = 'storyModal';
+    modal.className = 'fixed inset-0 z-[99999] pixel-overlay flex items-center justify-center p-4';
+    targetDoc.body.appendChild(modal);
+    console.log('🎭 DEBUG: Modal de historia creado');
+  }
+  
+  // Para la primera escena, mostrar loading
+  if (isFirstScene) {
+    modal.innerHTML = `
+      <div class="relative w-full max-w-4xl h-[70vh] pixel-panel overflow-hidden flex items-center justify-center jersey-font-niveles">
+        <div class="text-white text-2xl flex items-center gap-4" style="text-shadow:1px 1px 0 #000">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2" style="border-color:#a78bfa"></div>
+          Cargando escena...
+        </div>
+      </div>
+    `;
+    
+    // Para primera escena, cargar imágenes antes de mostrar
+    const currentImages = [`/img/${scene.background}`];
+    if (scene.character && scene.character !== null && scene.character !== '') {
+      currentImages.push(`/img/${scene.character}`);
+    }
+    
+    const loadImages = (imageSrcs) => {
+      return Promise.all(imageSrcs.map(src => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => {
+            console.log('🖼️ Primera escena - Imagen cargada:', src);
+            resolve(img);
+          };
+          img.onerror = () => {
+            console.warn('🖼️ Primera escena - Error cargando imagen:', src);
+            resolve(null);
+          };
+          img.src = src;
+        });
+      }));
+    };
+    
+    loadImages(currentImages).then(() => {
+      console.log('🎭 DEBUG: Primera escena - Imágenes cargadas, mostrando contenido');
+      window.renderStoryScene(scene, modal);
+    });
+  } else {
+    // Para escenas posteriores, mostrar INMEDIATAMENTE
+    // (las imágenes ya fueron precargadas en nextStoryScene)
+    console.log('🎭 DEBUG: Escena posterior - Mostrando inmediatamente (precargada)');
+    window.renderStoryScene(scene, modal);
+  }
+};
+
+// Función separada para renderizar la escena (después de cargar imágenes)
+window.renderStoryScene = function(scene, modal) {
+  const isFirstScene = window.currentSceneIndex === 0;
+  
+  if (isFirstScene) {
+    // Primera escena: reemplazar todo el contenido
+    renderFirstScene(scene, modal);
+  } else {
+    // Escenas posteriores: crear nueva capa encima de la anterior
+    renderLayeredScene(scene, modal);
+  }
+};
+
+// Función para renderizar la primera escena
+function renderFirstScene(scene, modal) {
+  // Posición del personaje
+  const characterPosition = scene.position || 'center';
+  let characterClass = 'absolute bottom-4';
+  
+  switch(characterPosition) {
+    case 'left':
+      characterClass += ' left-4';
+      break;
+    case 'right':
+      characterClass += ' right-4';
+      break;
+    case 'center':
+    default:
+      characterClass += ' left-1/2 transform -translate-x-1/2';
+      break;
+  }
+  
+  // Obtener estilos según el hablante
+  const speakerStyles = getSpeakerStyles(scene.speaker || 'Lili');
+  
+  // Crear contenido de la primera escena
+  const hasCharacter = scene.character && scene.character !== null && scene.character !== '';
+  
+  modal.innerHTML = `
+    <div class="flex flex-col items-center gap-4 w-full max-w-4xl">
+      <div class="story-container relative w-full h-[70vh] pixel-panel overflow-hidden jersey-font-niveles">
+        <!-- Fondo -->
+        <div class="story-background absolute inset-0 bg-cover bg-center bg-no-repeat rounded-2xl z-0" 
+             style="background-image: url('/img/${scene.background}');">
+        </div>
+        
+        <!-- Overlay para mejorar legibilidad -->
+        <div class="absolute inset-0 bg-black/20 rounded-2xl z-10"></div>
+        
+        <!-- Personaje (SIEMPRE crear el div, ocultar si no hay personaje) -->
+        <div class="story-character ${characterClass} w-64 sm:w-96 lg:w-110 h-auto z-20" style="display: ${hasCharacter ? 'block' : 'none'};">
+          ${hasCharacter ? `<img src="/img/${scene.character}" alt="Character" class="w-full h-auto object-contain max-h-96 drop-shadow-2xl">` : ''}
+        </div>
+        
+        <!-- Cuadro de nombre del orador -->
+        <div class="story-speaker absolute bottom-40 left-4 ${speakerStyles.nameBoxBg} text-white px-4 py-2 rounded-t-2xl border-2 ${speakerStyles.nameBoxBorder} z-20 jersey-font-niveles" style="text-shadow:1px 1px 0 #000;">
+          <div class="text-lg font-bold jersey-font-niveles">${speakerStyles.speakerName}</div>
+        </div>
+        
+        <!-- Diálogo (más compacto, sin incluir el botón) -->
+        <div class="story-dialogue absolute bottom-4 left-4 right-4 bg-black/65 backdrop-blur-xs rounded-2xl p-4 sm:p-6 border-2 ${speakerStyles.dialogueBorder} shadow-2xl z-20 jersey-font-niveles" style="text-shadow:1px 1px 0 #000; max-width: calc(100% - 2rem);">
+          <div id="dialogueText" class="text-white text-xl sm:text-2xl leading-relaxed jersey-font-niveles min-h-[3rem]">
+            <!-- El diálogo se escribirá aquí con animación -->
+          </div>
+        </div>
+        
+        <!-- Botón cerrar -->
+        <button onclick="window.closeStoryModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-black text-4xl transition-all duration-300 z-30 jersey-font-niveles hover:scale-110" style="background: rgba(128, 128, 128, 0.8); border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 6px; line-height: 1;">×</button>
+      </div>
+      
+      <!-- Botón Continuar (DEBAJO del contenedor principal) -->
+      <button id="continueBtn" onclick="window.nextScene()" class="pixel-button alt jersey-font-niveles opacity-50 cursor-not-allowed" style="width:auto; min-width: 120px; font-size: 16px; padding: 8px 16px;" disabled>
+        Continuar →
+      </button>
+    </div>
+  `;
+  
+  console.log('🎭 DEBUG: Primera escena renderizada directamente');
+  
+  // Iniciar typewriter inmediatamente
+  requestAnimationFrame(() => {
+    window.startTypewriterEffect(scene.dialogue);
+  });
+}
+
+// Función para renderizar escenas posteriores - cambiar imágenes y hablante
+function renderLayeredScene(scene, modal) {
+  console.log('🎭 DEBUG: Cambiando imágenes y hablante para escena', window.currentSceneIndex + 1);
+  
+  // Encontrar los elementos actuales
+  const backgroundDiv = modal.querySelector('.story-background');
+  const characterDiv = modal.querySelector('.story-character');
+  const characterImg = modal.querySelector('.story-character img');
+  const speakerDiv = modal.querySelector('.story-speaker');
+  const dialogueDiv = modal.querySelector('.story-dialogue');
+  
+  if (backgroundDiv && speakerDiv && dialogueDiv) {
+    // Obtener estilos según el nuevo hablante
+    const speakerStyles = getSpeakerStyles(scene.speaker || 'Lili');
+    
+    // Cambiar el fondo con precarga completa para evitar parpadeo negro (especialmente en iOS)
+    const newBackground = `/img/${scene.background}`;
+    
+    // Detectar iOS/Safari
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    
+    if (isIOS || isSafari) {
+      console.log('🍎 DEBUG: Detected iOS/Safari - usando precarga especial para background');
+      
+      // Método especial para iOS: precargar completamente la imagen antes de cambiar
+      const img = new Image();
+      img.onload = function() {
+        console.log('🖼️ Imagen precargada completamente para iOS');
+        
+        // Crear nuevo div con la imagen ya cargada
+        const newBackgroundDiv = document.createElement('div');
+        newBackgroundDiv.className = 'absolute inset-0 bg-cover bg-center bg-no-repeat rounded-2xl';
+        newBackgroundDiv.style.backgroundImage = `url('${newBackground}')`;
+        newBackgroundDiv.style.zIndex = '5';
+        newBackgroundDiv.style.opacity = '0';
+        
+        // Agregar el nuevo fondo
+        backgroundDiv.parentNode.insertBefore(newBackgroundDiv, backgroundDiv.nextSibling);
+        
+        // Fade in inmediato del nuevo fondo
+        requestAnimationFrame(() => {
+          newBackgroundDiv.style.transition = 'opacity 0.1s ease-out';
+          newBackgroundDiv.style.opacity = '1';
+          
+          // Después del fade, reemplazar el fondo original
+          setTimeout(() => {
+            backgroundDiv.style.transition = 'none';
+            backgroundDiv.style.backgroundImage = `url('${newBackground}')`;
+            newBackgroundDiv.remove();
+            console.log('🖼️ Transición iOS completada');
+          }, 150);
+        });
+      };
+      
+      img.onerror = function() {
+        console.warn('🖼️ Error cargando imagen para iOS, usando método estándar');
+        // Fallback al método estándar si falla la precarga
+        backgroundDiv.style.transition = 'none';
+        backgroundDiv.style.backgroundImage = `url('${newBackground}')`;
+      };
+      
+      img.src = newBackground;
+    } else {
+      // Método estándar para otros navegadores
+      console.log('🖥️ DEBUG: Navegador estándar - usando método de superposición');
+      
+      const newBackgroundDiv = document.createElement('div');
+      newBackgroundDiv.className = 'absolute inset-0 bg-cover bg-center bg-no-repeat rounded-2xl';
+      newBackgroundDiv.style.backgroundImage = `url('${newBackground}')`;
+      newBackgroundDiv.style.zIndex = '5';
+      
+      backgroundDiv.parentNode.insertBefore(newBackgroundDiv, backgroundDiv.nextSibling);
+      
+      setTimeout(() => {
+        backgroundDiv.style.transition = 'none';
+        backgroundDiv.style.backgroundImage = `url('${newBackground}')`;
+        newBackgroundDiv.remove();
+        console.log('🖼️ Fondo anterior removido, transición completada');
+      }, 100);
+    }
+    
+    // Manejar personaje - puede existir o no
+    const hasCharacter = scene.character && scene.character !== null && scene.character !== '';
+    
+    console.log('🎭 DEBUG: hasCharacter:', hasCharacter, 'scene.character:', scene.character);
+    console.log('🎭 DEBUG: characterDiv:', !!characterDiv, 'characterImg:', !!characterImg);
+    
+    if (hasCharacter && characterImg) {
+      console.log('🎭 DEBUG: Entrando en bloque de actualización de personaje');
+      // Si hay personaje y el elemento existe, actualizar imagen
+      if (isIOS || isSafari) {
+        // Precarga especial para iOS/Safari
+        const charImg = new Image();
+        charImg.onload = function() {
+          characterImg.src = `/img/${scene.character}`;
+          console.log('🖼️ Imagen de personaje precargada para iOS:', scene.character);
+        };
+        charImg.src = `/img/${scene.character}`;
+      } else {
+        characterImg.src = `/img/${scene.character}`;
+        console.log('🖼️ Imagen de personaje actualizada:', scene.character);
+      }
+      
+      // Actualizar posición del personaje
+      const characterPosition = scene.position || 'center';
+      characterDiv.className = 'story-character absolute bottom-4 w-64 sm:w-96 lg:w-110 h-auto z-20';
+      switch(characterPosition) {
+        case 'left':
+          characterDiv.classList.add('left-4');
+          break;
+        case 'right':
+          characterDiv.classList.add('right-4');
+          break;
+        case 'center':
+        default:
+          characterDiv.classList.add('left-1/2', 'transform', '-translate-x-1/2');
+          break;
+      }
+      
+      // Hacer visible el personaje
+      characterDiv.style.display = 'block';
+      console.log('🎭 DEBUG: Personaje hecho visible');
+    } else if (hasCharacter && !characterImg && characterDiv) {
+      // Si hay personaje pero no existe characterImg, intentar recrearlo
+      console.warn('⚠️ WARNING: Se necesita personaje pero characterImg no existe. Intentando recrear...');
+      
+      // Buscar o crear la imagen dentro del div
+      let img = characterDiv.querySelector('img');
+      if (!img) {
+        img = document.createElement('img');
+        img.className = 'w-full h-auto drop-shadow-2xl';
+        characterDiv.appendChild(img);
+        console.log('✅ Elemento img creado dentro de characterDiv');
+      }
+      
+      // Actualizar la imagen
+      img.src = `/img/${scene.character}`;
+      
+      // Actualizar posición del personaje
+      const characterPosition = scene.position || 'center';
+      characterDiv.className = 'story-character absolute bottom-4 w-64 sm:w-96 lg:w-110 h-auto z-20';
+      switch(characterPosition) {
+        case 'left':
+          characterDiv.classList.add('left-4');
+          break;
+        case 'right':
+          characterDiv.classList.add('right-4');
+          break;
+        case 'center':
+        default:
+          characterDiv.classList.add('left-1/2', 'transform', '-translate-x-1/2');
+          break;
+      }
+      
+      // Hacer visible el personaje
+      characterDiv.style.display = 'block';
+      console.log('🎭 DEBUG: Personaje recreado y hecho visible');
+    } else if (hasCharacter && !characterDiv) {
+      // Si hay personaje pero characterDiv no existe en absoluto, es un error crítico
+      console.error('❌ ERROR CRÍTICO: Se necesita mostrar personaje pero characterDiv no existe en el modal');
+      console.error('❌ Esto indica que el modal no tiene la estructura correcta de character div');
+    } else if (!hasCharacter && characterDiv) {
+      // Si no hay personaje, ocultar el elemento
+      characterDiv.style.display = 'none';
+      console.log('🎭 DEBUG: Personaje ocultado');
+    }
+    
+    // Actualizar el hablante y sus estilos
+  speakerDiv.className = `story-speaker absolute bottom-40 left-4 ${speakerStyles.nameBoxBg} text-white px-4 py-2 rounded-t-2xl border-2 ${speakerStyles.nameBoxBorder} z-20 jersey-font-niveles`;
+  const nameEl = speakerDiv.querySelector('.jersey-font-niveles') || speakerDiv.querySelector('.speaker-name') || speakerDiv;
+  if (nameEl) nameEl.textContent = speakerStyles.speakerName;
+    
+    // Actualizar el borde del diálogo
+  dialogueDiv.className = `story-dialogue absolute bottom-4 left-4 right-4 bg-black/65 backdrop-blur-xs rounded-2xl p-4 sm:p-6 border-2 ${speakerStyles.dialogueBorder} shadow-2xl z-20 jersey-font-niveles`;
+    
+    console.log('🎭 DEBUG: Escena actualizada (personaje:', hasCharacter ? 'sí' : 'no', '), iniciando typewriter');
+    
+    // Iniciar typewriter inmediatamente
+    requestAnimationFrame(() => {
+      window.startTypewriterEffect(scene.dialogue);
+    });
+  } else {
+    console.error('🎭 ERROR: No se encontraron elementos para actualizar');
+    console.log('🎭 DEBUG: Elementos encontrados:', {
+      backgroundDiv: !!backgroundDiv,
+      characterDiv: !!characterDiv,
+      characterImg: !!characterImg,
+      speakerDiv: !!speakerDiv,
+      dialogueDiv: !!dialogueDiv
+    });
+  }
+};
+
+// Función para obtener estilos según el hablante
+function getSpeakerStyles(speaker) {
+  // Obtener usuario actual
+  const currentUser = window.parent?.username || 
+                     window.parent?.jwtTokenUser || 
+                     window.username || 
+                     window.jwtTokenUser || 
+                     'Estudiante';
+  
+  // Procesar el nombre del hablante (reemplazar {username} si es necesario)
+  const processedSpeaker = speaker.replace(/{username}/g, currentUser).replace(/{user}/g, currentUser);
+  
+  // Determinar si es el usuario
+  const isUser = speaker === '{username}' || speaker === '{user}' || processedSpeaker === currentUser;
+  
+  if (isUser) {
+    // Estilos para el usuario - amarillo
+    return {
+      nameBoxBg: 'bg-gradient-to-r from-yellow-600 to-amber-600',
+      nameBoxBorder: 'border-yellow-300',
+      dialogueBorder: 'border-yellow-300',
+      speakerName: processedSpeaker
+    };
+  } else if (speaker === 'Emperatriz' || speaker === 'La Emperatriz') {
+    // Estilos para la Emperatriz - turquesa
+    return {
+      nameBoxBg: 'bg-gradient-to-r from-teal-600 to-cyan-600',
+      nameBoxBorder: 'border-cyan-300',
+      dialogueBorder: 'border-cyan-300',
+      speakerName: processedSpeaker
+    };
+  } else if (speaker === 'Wukong') {
+    // Estilos para Wukong - rojo
+    return {
+      nameBoxBg: 'bg-gradient-to-r from-red-600 to-red-700',
+      nameBoxBorder: 'border-red-300',
+      dialogueBorder: 'border-red-300',
+      speakerName: processedSpeaker
+    };
+  } else if (speaker === 'Nezha') {
+    // Estilos para Nezha - naranja
+    return {
+      nameBoxBg: 'bg-gradient-to-r from-orange-600 to-orange-700',
+      nameBoxBorder: 'border-orange-300',
+      dialogueBorder: 'border-orange-300',
+      speakerName: processedSpeaker
+    };
+  } else if (speaker === 'Narrador' || speaker === 'Narrator') {
+    // Estilos para el Narrador - gris oscuro
+    return {
+      nameBoxBg: 'bg-gradient-to-r from-gray-700 to-gray-800',
+      nameBoxBorder: 'border-gray-500',
+      dialogueBorder: 'border-gray-500',
+      speakerName: processedSpeaker
+    };
+  } else {
+    // Estilos para Lili (por defecto) - morado
+    return {
+      nameBoxBg: 'bg-gradient-to-r from-purple-600 to-pink-600',
+      nameBoxBorder: 'border-purple-300',
+      dialogueBorder: 'border-purple-300',
+      speakerName: processedSpeaker
+    };
+  }
+}
+
+// Función para procesar placeholders en el texto
+window.processDialoguePlaceholders = function(text) {
+  // Obtener usuario desde window principal o fallback
+  const currentUser = window.parent?.username || 
+                     window.parent?.jwtTokenUser || 
+                     window.username || 
+                     window.jwtTokenUser || 
+                     'Estudiante';
+  
+  // Reemplazar placeholders con HTML para color amarillo
+  return text
+    .replace(/{username}/g, `<span style="color: #fbbf24; font-weight: bold;">${currentUser}</span>`)
+    .replace(/{user}/g, `<span style="color: #fbbf24; font-weight: bold;">${currentUser}</span>`);
+};
+
+// Función para efecto de escritura automática (typewriter effect)
+window.startTypewriterEffect = function(text) {
+  const targetDoc = (window.parent && window.parent.document) ? window.parent.document : document;
+  const dialogueElement = targetDoc.getElementById('dialogueText');
+  const continueBtn = targetDoc.getElementById('continueBtn');
+  
+  if (!dialogueElement || !continueBtn) return;
+  
+  // Procesar placeholders antes del efecto typewriter
+  const processedText = window.processDialoguePlaceholders(text);
+  
+  // Crear sonido de escritura usando el sistema de audio del juego principal
+  let lastTypingSoundTime = 0;
+  
+  function createTypewriterTickSound() {
+    try {
+      // Obtener audioCtx desde window principal
+      const audioCtx = window.parent?.audioCtx || window.audioCtx;
+      const ensureAudio = window.parent?.ensureAudio || window.ensureAudio;
+      
+      if (!audioCtx || !ensureAudio) {
+        console.log('🎵 Audio context no disponible en modo historia');
+        return null;
+      }
+      
+      function playTypewriterTick() {
+        // Control de pausas - teclado mecánico rhythm
+        const now = Date.now();
+        if (now - lastTypingSoundTime < 80) {
+          return; // Mantener ritmo mecánico natural
+        }
+        lastTypingSoundTime = now;
+        
+        ensureAudio(); // Activar AudioContext si está suspendido
+        
+        // 🎹 SONIDO TECLADO MECÁNICO - Doble click satisfactorio
+        
+        // CLICK 1: "Down press" (tecla bajando)
+        const downOsc = audioCtx.createOscillator();
+        const downGain = audioCtx.createGain();
+        downOsc.connect(downGain);
+        downGain.connect(audioCtx.destination);
+        
+        downOsc.type = 'square'; // Square para sonido más mecánico
+        downOsc.frequency.setValueAtTime(800 + Math.random() * 200, audioCtx.currentTime); // Variación realista
+        downGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+        downGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.015);
+        
+        downOsc.start(audioCtx.currentTime);
+        downOsc.stop(audioCtx.currentTime + 0.015);
+        
+        // CLICK 2: "Up release" (tecla subiendo) - ligeramente después
+        setTimeout(() => {
+          const upOsc = audioCtx.createOscillator();
+          const upGain = audioCtx.createGain();
+          upOsc.connect(upGain);
+          upGain.connect(audioCtx.destination);
+          
+          upOsc.type = 'square';
+          upOsc.frequency.setValueAtTime(1200 + Math.random() * 300, audioCtx.currentTime); // Más agudo para "release"
+          upGain.gain.setValueAtTime(0.02, audioCtx.currentTime); // Más suave que el down
+          upGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.012);
+          
+          upOsc.start(audioCtx.currentTime);
+          upOsc.stop(audioCtx.currentTime + 0.012);
+        }, 8); // 8ms después del primer click
+      }
+      
+      return playTypewriterTick;
+    } catch (error) {
+      console.log('🎵 Audio no disponible:', error);
+      return null;
+    }
+  }
+  
+  const playTypingSound = createTypewriterTickSound();
+  
+  // Resetear el texto y deshabilitar botón
+  dialogueElement.innerHTML = '';
+  continueBtn.disabled = true;
+  continueBtn.classList.add('opacity-50', 'cursor-not-allowed');
+  continueBtn.classList.remove('opacity-100', 'cursor-pointer');
+  
+  let currentIndex = 0;
+  let isTyping = true; // Flag para controlar si se está escribiendo
+  const typingSpeed = 15; // Velocidad de escritura en milisegundos (más rápido)
+  
+  // Función para crear HTML parcial mostrando solo los primeros N caracteres
+  function createPartialHTML(htmlText, charCount) {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlText;
+    
+    let currentCharCount = 0;
+    
+    function processNode(node) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent;
+        if (currentCharCount + text.length <= charCount) {
+          currentCharCount += text.length;
+          return text;
+        } else {
+          const remainingChars = charCount - currentCharCount;
+          currentCharCount = charCount;
+          return text.substring(0, remainingChars);
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        let result = `<${node.tagName.toLowerCase()}`;
+        
+        // Copiar atributos
+        for (let attr of node.attributes) {
+          result += ` ${attr.name}="${attr.value}"`;
+        }
+        result += '>';
+        
+        // Procesar hijos
+        for (let child of node.childNodes) {
+          if (currentCharCount >= charCount) break;
+          result += processNode(child);
+        }
+        
+        result += `</${node.tagName.toLowerCase()}>`;
+        return result;
+      }
+      return '';
+    }
+    
+    let result = '';
+    for (let child of tempDiv.childNodes) {
+      if (currentCharCount >= charCount) break;
+      result += processNode(child);
+    }
+    
+    return result;
+  }
+  
+  // Crear un elemento temporal para extraer solo el texto visible (sin HTML)
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = processedText;
+  const visibleText = tempDiv.textContent || tempDiv.innerText || '';
+  
+  function typeCharacter() {
+    if (currentIndex < visibleText.length && isTyping) {
+      const char = visibleText[currentIndex];
+      
+      // Construir el HTML progresivamente mostrando solo los caracteres hasta currentIndex
+      const partialHTML = createPartialHTML(processedText, currentIndex + 1);
+      dialogueElement.innerHTML = partialHTML;
+      
+      // Reproducir sonido solo para caracteres visibles (no espacios)
+      if (playTypingSound && char.trim() !== '') {
+        playTypingSound();
+      }
+      
+      currentIndex++;
+      setTimeout(typeCharacter, typingSpeed);
+    } else {
+      // Cuando termine de escribir o se detenga, parar el sonido y habilitar el botón
+      isTyping = false;
+      
+      continueBtn.disabled = false;
+      continueBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      continueBtn.classList.add('opacity-100', 'cursor-pointer');
+      
+      // Agregar efecto de parpadeo al botón para indicar que está listo
+      continueBtn.classList.add('animate-pulse');
+      setTimeout(() => {
+        continueBtn.classList.remove('animate-pulse');
+      }, 10000);
+    }
+  }
+  
+  // Agregar evento para saltar la animación al hacer clic en el diálogo
+  dialogueElement.style.cursor = 'pointer';
+  dialogueElement.onclick = function() {
+    if (currentIndex < visibleText.length && isTyping) {
+      // Detener la escritura y el sonido
+      isTyping = false;
+      
+      // Si aún se está escribiendo, completar inmediatamente
+      dialogueElement.innerHTML = processedText;
+      currentIndex = visibleText.length;
+      
+      continueBtn.disabled = false;
+      continueBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      continueBtn.classList.add('opacity-100', 'cursor-pointer');
+      
+      // Agregar efecto de parpadeo al botón
+      continueBtn.classList.add('animate-pulse');
+      setTimeout(() => {
+        continueBtn.classList.remove('animate-pulse');
+      }, 10000);
+    }
+  };
+  
+  // Iniciar la animación
+  typeCharacter();
+};
+
+// Función para avanzar a la siguiente escena (global para acceso desde HTML)
+window.nextScene = function() {
+  console.log('🎭 DEBUG: Pasando a siguiente escena. Actual:', window.currentSceneIndex);
+  
+  // Verificar si la escena actual tiene transición fade
+  const currentScene = window.currentStoryData[window.currentSceneIndex];
+  const hasFadeTransition = currentScene && currentScene.fadeTransition === true;
+  
+  window.currentSceneIndex++;
+  
+  if (window.currentSceneIndex >= window.currentStoryData.length) {
+    console.log('🎭 DEBUG: Historia completada');
+    
+    // Guardar progreso del capítulo completado
+    if (window.currentChapterId) {
+      window.markChapterAsCompleted(window.currentChapterId);
+    }
+    
+    // Cerrar modal directamente sin mostrar mensaje
+    window.closeStoryModal();
+  } else {
+    const nextScene = window.currentStoryData[window.currentSceneIndex];
+    
+    // Verificar si la escena tiene transición fade
+    if (nextScene.fadeTransition) {
+      console.log('🎭 DEBUG: Aplicando transición fade - precargando imágenes primero');
+      
+      // Precargar imágenes antes del fade
+      const imagesToPreload = [`/img/${nextScene.background}`];
+      if (nextScene.character && nextScene.character !== null && nextScene.character !== '') {
+        imagesToPreload.push(`/img/${nextScene.character}`);
+      }
+      
+      const preloadImages = (imageSrcs) => {
+        return Promise.all(imageSrcs.map(src => {
+          return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+              console.log('🖼️ Precarga completada para fade:', src);
+              resolve(img);
+            };
+            img.onerror = () => {
+              console.warn('🖼️ Error en precarga para fade:', src);
+              resolve(null);
+            };
+            img.src = src;
+          });
+        }));
+      };
+      
+      // Precargar imágenes, luego aplicar fade
+      preloadImages(imagesToPreload).then(() => {
+        console.log('🎭 DEBUG: Imágenes precargadas, iniciando fade out del contenido');
+        const targetDoc = (window.parent && window.parent.document) ? window.parent.document : document;
+        const modal = targetDoc.getElementById('storyModal');
+        
+        if (modal) {
+          // Buscar el contenido del modal (el iframe o el contenido visual)
+          const storyContent = modal.querySelector('.story-container') || modal.querySelector('iframe') || modal;
+          
+          // Si encontramos el contenido específico, hacer fade solo de eso
+          if (storyContent && storyContent !== modal) {
+            // Fade out solo del contenido, manteniendo el overlay
+            storyContent.style.transition = 'opacity 0.4s ease-in-out';
+            storyContent.style.opacity = '0';
+            
+            // Después del fade out, cambiar escena y fade in
+            setTimeout(() => {
+              window.showStoryScene();
+              // Fade in después de que se renderice la nueva escena
+              requestAnimationFrame(() => {
+                storyContent.style.opacity = '1';
+                // Limpiar la transición después
+                setTimeout(() => {
+                  storyContent.style.transition = '';
+                }, 400);
+              });
+            }, 400);
+          } else {
+            // Fallback: hacer fade del iframe desde aquí
+            const iframe = targetDoc.querySelector('#storyModal iframe');
+            if (iframe) {
+              iframe.style.transition = 'opacity 0.4s ease-in-out';
+              iframe.style.opacity = '0';
+              
+              setTimeout(() => {
+                window.showStoryScene();
+                requestAnimationFrame(() => {
+                  iframe.style.opacity = '1';
+                  setTimeout(() => {
+                    iframe.style.transition = '';
+                  }, 400);
+                });
+              }, 400);
+            } else {
+              // Si no encontramos nada específico, cambio instantáneo
+              console.log('🎭 DEBUG: No se encontró contenido específico, cambio instantáneo');
+              window.showStoryScene();
+            }
+          }
+        }
+      });
+    } else {
+      // Transición instantánea normal
+      console.log('🎭 DEBUG: Precargando siguiente escena antes de mostrar');
+      
+      const imagesToPreload = [`/img/${nextScene.background}`];
+      if (nextScene.character && nextScene.character !== null && nextScene.character !== '') {
+        imagesToPreload.push(`/img/${nextScene.character}`);
+      }
+      
+      // Función para precargar imágenes
+      const preloadImages = (imageSrcs) => {
+        return Promise.all(imageSrcs.map(src => {
+          return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+              console.log('🖼️ Precarga completada:', src);
+              resolve(img);
+            };
+            img.onerror = () => {
+              console.warn('🖼️ Error en precarga:', src);
+              resolve(null); // Resolver con null para no bloquear
+            };
+            img.src = src;
+          });
+        }));
+      };
+      
+      // Precargar imágenes y luego mostrar escena instantáneamente
+      preloadImages(imagesToPreload).then(() => {
+        console.log('🎭 DEBUG: Precarga completada, mostrando escena instantáneamente');
+        // Cambio instantáneo - las imágenes ya están en caché
+        window.showStoryScene();
+      });
+    }
+  }
+};
+
+
+// Función para cerrar modal de historia (global para acceso desde HTML)
+// Función para marcar capítulo como completado
+window.markChapterAsCompleted = async function(chapterId) {
+  // Solo trackear capítulos de la historia principal (no tutoriales)
+  const trackedChapters = ['chapter1', 'chapter6', 'chapter7', 'chapter8', 'chapter9'];
+  
+  if (!trackedChapters.includes(chapterId)) {
+    console.log('📖 Capítulo no trackeado (tutorial):', chapterId);
+    return;
+  }
+  
+  try {
+    const parentDoc = window.parent.document || document;
+    const jwtToken = parentDoc.querySelector('script')?.textContent?.match(/let jwtToken = '([^']+)'/)?.[1] || 
+                     localStorage.getItem('jwtToken') || 
+                     (window.parent && window.parent.jwtToken);
+    
+    if (!jwtToken) {
+      console.log('📖 No hay token JWT, no se puede guardar progreso');
+      return;
+    }
+    
+    // Usar API_BASE del documento padre (window.parent) o window.location.origin
+    const API_BASE = (window.parent && window.parent.API_BASE) || 
+                     (window.location.origin.includes('localhost') ? 'http://localhost:4000' : window.location.origin);
+    
+    console.log('🔗 API_BASE usado para guardar progreso:', API_BASE);
+    
+    const response = await fetch(`${API_BASE}/api/story-progress`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': jwtToken
+      },
+      body: JSON.stringify({ chapterId })
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log('✅ Progreso de historia guardado:', data.storyProgress);
+    } else {
+      console.error('❌ Error guardando progreso de historia');
+    }
+  } catch (error) {
+    console.error('❌ Error en markChapterAsCompleted:', error);
+  }
+};
+
+window.showHoroscopeProgress = function() {
+  console.log('🐲 Mostrando progreso de Los 12 Guardianes');
+  
+  // Obtener el documento objetivo
+  const targetDoc = (window.parent && window.parent.document) ? window.parent.document : document;
+  
+  // Obtener progreso desde el juego principal
+  const mainWindow = window.parent || window;
+  
+  // 🔥 NUEVA LÓGICA: Verificar badges en lugar de horoscopeAnimalsUnlocked
+  const horoscopeBadges = mainWindow.horoscopeBadges || [];
+  console.log('🎖️ DEBUG: horoscopeBadges encontrados:', horoscopeBadges.length);
+  
+  // Mapear hanzi a categorías
+  const badgeCategories = {
+    '鼠': 'colores',
+    '牛': 'hobbies', 
+    '虎': 'profesiones',
+    '兔': 'verduras',
+    '龙': 'emociones',
+    '蛇': 'casa',
+    '马': 'deportes',
+    '羊': 'ropa',
+    '猴': 'cuerpo',
+    '鸡': 'fruta',
+    '狗': 'animales',
+    '猪': 'comidas'
+  };
+  
+  // Obtener categorías desbloqueadas desde badges
+  const unlockedAnimals = horoscopeBadges
+    .map(badge => badgeCategories[badge.hanzi])
+    .filter(cat => cat); // Filtrar undefined
+  
+  console.log('🔓 DEBUG: Categorías desbloqueadas:', unlockedAnimals);
+  
+  // Definir los 12 animales del horóscopo en orden
+  const horoscopeAnimals = [
+    { id: 'rata', emoji: '🐭', name: 'Rata', category: 'colores', hanzi: '鼠' },
+    { id: 'buey', emoji: '🐮', name: 'Buey', category: 'hobbies', hanzi: '牛' },
+    { id: 'tigre', emoji: '🐯', name: 'Tigre', category: 'profesiones', hanzi: '虎' },
+    { id: 'conejo', emoji: '🐰', name: 'Conejo', category: 'verduras', hanzi: '兔' },
+    { id: 'dragon', emoji: '🐲', name: 'Dragón', category: 'emociones', hanzi: '龙' },
+    { id: 'serpiente', emoji: '🐍', name: 'Serpiente', category: 'casa', hanzi: '蛇' },
+    { id: 'caballo', emoji: '🐴', name: 'Caballo', category: 'deportes', hanzi: '马' },
+    { id: 'cabra', emoji: '🐐', name: 'Cabra', category: 'ropa', hanzi: '羊' },
+    { id: 'mono', emoji: '🐵', name: 'Mono', category: 'cuerpo', hanzi: '猴' },
+    { id: 'gallo', emoji: '🐔', name: 'Gallo', category: 'fruta', hanzi: '鸡' },
+    { id: 'perro', emoji: '🐕', name: 'Perro', category: 'animales', hanzi: '狗' },
+    { id: 'cerdo', emoji: '🐷', name: 'Cerdo', category: 'comidas', hanzi: '猪' }
+  ];
+  
+  // Crear HTML para los animales
+  let animalsHTML = '';
+  horoscopeAnimals.forEach(animal => {
+    const isUnlocked = unlockedAnimals.includes(animal.category);
+    const statusClass = isUnlocked ? 'unlocked' : 'locked';
+    const statusIcon = isUnlocked ? '✅' : '🔒';
+    
+    animalsHTML += `
+      <div class="animal-card ${statusClass}" style="
+        background: ${isUnlocked ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.3))' : 'rgba(255, 255, 255, 0.05)'};
+        border: 2px solid ${isUnlocked ? 'rgba(16, 185, 129, 0.5)' : 'rgba(255, 255, 255, 0.15)'};
+        border-radius: 12px;
+        padding: 12px;
+        text-align: center;
+        transition: all 0.3s ease;
+      ">
+        <div style="font-size: 36px; ${isUnlocked ? '' : 'filter: grayscale(1); opacity: 0.3;'}">${animal.emoji}</div>
+        <div style="font-size: 16px; font-weight: bold; margin-top: 4px; color: ${isUnlocked ? '#10b981' : '#94a3b8'};">${animal.name}</div>
+        <div style="font-size: 20px; margin-top: 4px;">${statusIcon}</div>
+      </div>
+    `;
+  });
+  
+  // Crear el modal
+  const modal = targetDoc.createElement('div');
+  modal.id = 'horoscopeProgressModal';
+  modal.className = 'fixed inset-0 z-[100000] flex items-center justify-center p-4';
+  modal.style.cssText = 'background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);';
+  
+  const completedCount = unlockedAnimals.length;
+  const progressPercent = Math.round((completedCount / 12) * 100);
+  
+  modal.innerHTML = `
+    <div class="relative max-w-3xl w-full bg-gradient-to-b from-purple-900 to-indigo-900 rounded-2xl border-4 border-purple-500 shadow-2xl p-6 jersey-font-niveles" style="max-height: 90vh; overflow-y: auto;">
+      <!-- Botón cerrar -->
+      <button onclick="this.closest('#horoscopeProgressModal').remove()" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center text-white text-3xl transition-all duration-200 hover:opacity-80" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 8px; line-height: 1; z-index: 10;">×</button>
+      
+      <!-- Título -->
+      <h2 class="text-3xl font-bold text-center text-white mb-4" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+        Los 12 Guardianes
+      </h2>
+      
+      <!-- Barra de progreso -->
+      <div class="mb-6">
+        <div class="text-center text-xl text-white mb-2" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">
+          Progreso: ${completedCount}/12 (${progressPercent}%)
+        </div>
+        <div class="w-full bg-gray-700 rounded-full overflow-hidden" style="border: 2px solid rgba(255, 255, 255, 0.3); height: 16px;">
+          <div class="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-500" style="width: ${progressPercent}%;"></div>
+        </div>
+      </div>
+      
+      <!-- Grid de animales -->
+      <div class="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-6">
+        ${animalsHTML}
+      </div>
+      
+      
+      <!-- Botón cerrar -->
+      <button onclick="this.closest('#horoscopeProgressModal').remove()" class="pixel-button pixel-close jersey-font-niveles mt-4" style="width: 100%; max-width: 200px; margin: 0 auto; display: block;">
+        Cerrar
+      </button>
+    </div>
+  `;
+  
+  targetDoc.body.appendChild(modal);
+  
+  // Cerrar al hacer clic fuera del contenido
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+};
+
+window.closeStoryModal = function() {
+  console.log('�🎭 DEBUG: Cerrando modal de historia');
+  
+  // Usar el documento padre para buscar elementos
+  const targetDoc = (window.parent && window.parent.document) ? window.parent.document : document;
+  
+  // Remover modal de capítulos si existe
+  const chapterModal = targetDoc.getElementById('chapterModal');
+  if (chapterModal) {
+    chapterModal.remove();
+    console.log('🎭 DEBUG: Modal de capítulos removido');
+  }
+  
+  // Remover modal de historia si existe
+  const storyModal = targetDoc.getElementById('storyModal');
+  if (storyModal) {
+    storyModal.remove();
+    console.log('🎭 DEBUG: Modal de historia removido');
+  }
+  
+  // Remover modal de progreso del horóscopo si existe
+  const horoscopeProgressModal = targetDoc.getElementById('horoscopeProgressModal');
+  if (horoscopeProgressModal) {
+    horoscopeProgressModal.remove();
+  }
+  
+  // Limpiar variables
+  window.currentStoryData = null;
+  window.currentSceneIndex = 0;
+};
+
+// 📢 Comunicación con el juego principal
+console.log('🎭 Sistema de Historia cargado desde story.html');
+
+</script>
+
+</body>
+</html>

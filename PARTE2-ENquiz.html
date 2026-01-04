@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chinese Flashcards · Units</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="theme-color" content="#0f172a" />
+  <style>
+    .flip { transform: rotateY(180deg); }
+    .preserve-3d { transform-style: preserve-3d; }
+    .backface-hidden { backface-visibility: hidden; }
+    .rotateY180 { transform: rotateY(180deg); }
+    .perspective { perspective: 1000px; }
+
+    /* ---------- Flip Animation ---------- */
+    .card-flip-vert {
+      transition: transform 0.44s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+    .card-flip-vert.flipping {
+      transform: rotateX(90deg);
+    }
+    .card-flip-vert.flipped {
+      transform: rotateX(0deg);
+    }
+    .cardWrong {
+      background: linear-gradient(135deg, #1e1b4b 0%, #7f1d1d 100%) !important;
+    }
+    @keyframes cardWrongFade {
+      0% { background: linear-gradient(135deg, #1e1b4b 0%, #7f1d1d 100%); }
+      100% { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+    }
+    .cardWrongFade {
+      animation: cardWrongFade 0.6s ease-out forwards;
+    }
+    @keyframes optCorrectFade {
+      0% { background-color: #059669; transform: scale(1.05); }
+      100% { background-color: #6366f1; transform: scale(1); }
+    }
+    .optCorrectFade {
+      animation: optCorrectFade 0.4s ease-out forwards;
+    }
+    @keyframes optWrongFade {
+      0% { background-color: #dc2626; transform: scale(0.95); }
+      100% { background-color: #1e293b; transform: scale(1); }
+    }
+    .optWrongFade {
+      animation: optWrongFade 0.4s ease-out forwards;
+    }
+    
+    /* Animaciones de feedback */
+    @keyframes pop {
+      0%   { transform: scale(1);   box-shadow: 0 0 0 rgba(16,185,129,0); }
+      30%  { transform: scale(1.09);box-shadow: 0 0 45px rgba(16,185,129,.55); }
+      100% { transform: scale(1);   box-shadow: 0 0 0 rgba(16,185,129,0); }
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%     { transform: translateX(-8px); }
+      40%     { transform: translateX(8px); }
+      60%     { transform: translateX(-6px); }
+      80%     { transform: translateX(6px); }
+    }
+    .popAnim   { animation: pop   420ms ease-out; }
+    .shakeAnim { animation: shake 420ms ease; }
+    
+    .optCorrect {
+      background-color: #059669 !important;
+      color: #fff !important;
+      box-shadow: 0 0 26px rgba(16,185,129,.75) !important;
+      transform: scale(1.02);
+    }
+    .optWrong {
+      background-color: #dc2626 !important;
+      color: #fff !important;
+      box-shadow: 0 0 20px rgba(220,38,38,.7) !important;
+    }
+
+    /* Counter Button Glow Animation */
+    @keyframes buttonGlowPop {
+      0% { transform: scale(1); box-shadow: 0 0 0 rgba(0,0,0,0); }
+      50% { transform: scale(1.05); box-shadow: 0 0 20px currentColor; }
+      100% { transform: scale(1); box-shadow: 0 0 0 rgba(0,0,0,0); }
+    }
+    .button-glow-animation {
+      animation: buttonGlowPop 0.5s ease-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-white text-slate-900">
+  <div class="max-w-3xl mx-auto p-4 sm:p-6">
+
+    <!-- Header -->
+    <header class="flex flex-col gap-3 items-center">
+      <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-center">The Best Flashcards</h1>
+      <div class="w-full max-w-2xl flex gap-2">
+        <button id="btnKnown" class="flex-1 px-4 py-2 rounded-2xl font-bold bg-emerald-500 hover:bg-emerald-400 text-white">Known <span id="countKnown" class="opacity-80">0</span></button>
+        <button id="btnRevise1" class="flex-1 px-4 py-2 rounded-2xl font-bold bg-orange-500 hover:bg-orange-400 text-white">To revise <span id="countRev1" class="opacity-80">0</span></button>
+        <button id="btnRevise2" class="flex-1 px-4 py-2 rounded-2xl font-bold bg-orange-500 hover:bg-orange-400 text-white">To confirm <span id="countRev2" class="opacity-80">0</span></button>
+      </div>
+      <div class="w-full max-w-2xl flex gap-2">
+        <button id="btnUnit1" class="flex-1 px-4 py-2 rounded-2xl font-bold bg-indigo-500 hover:bg-indigo-400 text-white">Unit 1</button>
+        <button id="btnUnit2" class="flex-1 px-4 py-2 rounded-2xl font-bold bg-indigo-500 hover:bg-indigo-400 text-white">Unit 2</button>
+        <button id="btnUnit3" class="flex-1 px-4 py-2 rounded-2xl font-bold bg-indigo-500 hover:bg-indigo-400 text-white">Unit 3</button>
+      </div>
+      <div class="w-full max-w-2xl flex gap-2">
+        <button id="btnQuizPinyin" class="flex-1 px-4 py-2 rounded-2xl font-bold bg-purple-500 hover:bg-purple-400 text-white">Quiz Pinyin</button>
+        <button id="btnQuizMeaning" class="flex-1 px-4 py-2 rounded-2xl font-bold bg-purple-500 hover:bg-purple-400 text-white">Quiz Meaning</button>
+        <button id="btnQuizHanzi" class="flex-1 px-4 py-2 rounded-2xl font-bold bg-purple-500 hover:bg-purple-400 text-white">Quiz Hanzi</button>
+      </div>
+    </header>
+
+    <!-- Status -->
+    <section class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+      <div class="bg-slate-100 rounded-xl p-3"><div class="text-slate-600">In Session</div><div id="statInSession" class="text-xl font-semibold text-slate-900">0</div></div>
+      <div class="bg-slate-100 rounded-xl p-3"><div class="text-slate-600">Today Reviewed</div><div id="statToday" class="text-xl font-semibold text-slate-900">0</div></div>
+      <div class="bg-slate-100 rounded-xl p-3"><div class="text-slate-600">Current</div><div id="statMission" class="text-xl font-semibold text-slate-900">—</div></div>
+    </section>
+
+    <!-- Card -->
+    <main class="mt-6">
+      <div id="cardWrap" class="relative h-72 sm:h-80 select-none perspective">
+        <div id="card" class="absolute inset-0 rounded-3xl bg-slate-50 ring-1 ring-slate-200 shadow-xl flex items-center justify-center text-center preserve-3d transition-transform duration-300 will-change-transform">
+          <div id="cardFront" class="absolute inset-0 flex items-center justify-center backface-hidden text-5xl font-bold text-slate-900"></div>
+          <div id="cardBack" class="absolute inset-0 flex flex-col items-center justify-center rotateY180 backface-hidden text-2xl leading-relaxed whitespace-pre-line text-slate-900"></div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div id="flashRow" class="mt-4 grid grid-cols-3 gap-2">
+        <button id="btnDontKnow" class="col-span-1 py-3 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-900 text-sm sm:text-base">← Don't know</button>
+        <button id="btnFlip" class="col-span-1 py-3 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-900 text-sm sm:text-base">Flip (Space)</button>
+        <button id="btnKnow" class="col-span-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm sm:text-base">I knew it →</button>
+      </div>
+      <!-- Quiz Options -->
+      <div id="quizRow" class="mt-4 grid grid-cols-2 gap-2"></div>
+      <p class="mt-3 text-slate-600 text-xs sm:text-sm">Tips: Click/tap card to flip. Keyboard: Left = Don't know, Space = Flip, Right = Know. On mobile: swipe left/right.</p>
+    </main>
+  </div>
+
+  <script>
+  // bump key if quieres forzar datos nuevos: 'srs_units_v3'
+  const STORAGE_KEY = 'srs_units_v3';
+
+  let cards = [];
+  let sessionQueue = [];
+  let currentCard = null;
+  let flipped = false;
+  let todayReviewed = 0;
+  let currentMission = '';
+  let sessionTotal = 0;
+  let sessionCorrect = 0;
+  let mode = 'flash'; // 'flash', 'quizPinyin', 'quizMeaning', 'quizHanzi'
+
+  const cardEl = document.getElementById('card');
+  const frontEl = document.getElementById('cardFront');
+  const backEl = document.getElementById('cardBack');
+  const statInSession = document.getElementById('statInSession');
+  const statToday = document.getElementById('statToday');
+  const statMission = document.getElementById('statMission');
+  const flashRow = document.getElementById('flashRow');
+  const quizRow = document.getElementById('quizRow');
+
+  function uid(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
+  function now(){ return Date.now(); }
+  function saveAll(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(cards)); }
+
+  function unit1Sample(){
+    return [
+      ['爱','ài','love','unit1'], ['学','xué','to learn','unit1'], ['你好','nǐ hǎo','hello','unit1'],
+      ['书','shū','book','unit1'], ['朋友','péngyou','friend','unit1'], ['学校','xuéxiào','school','unit1'],
+      ['老师','lǎoshī','teacher','unit1'], ['学生','xuéshēng','student','unit1'], ['家','jiā','home','unit1'],
+      ['饭','fàn','meal','unit1'],
+    ];
+  }
+  function unit2Sample(){
+    return [
+      ['水','shuǐ','water','unit2'], ['茶','chá','tea','unit2'], ['谢谢','xièxie','thanks','unit2'], ['再见','zàijiàn','goodbye','unit2'],
+      ['中国','Zhōngguó','China','unit2'], ['北京','Běijīng','Beijing','unit2'], ['上海','Shànghǎi','Shanghai','unit2'],
+      ['今天','jīntiān','today','unit2'], ['明天','míngtiān','tomorrow','unit2'], ['昨天','zuótiān','yesterday','unit2'],
+    ];
+  }
+  function unit3Sample(){
+    return [
+      ['电脑','diànnǎo','computer','unit3'], ['手机','shǒujī','mobile phone','unit3'], ['桌子','zhuōzi','table','unit3'],
+      ['椅子','yǐzi','chair','unit3'], ['猫','māo','cat','unit3'], ['狗','gǒu','dog','unit3'], ['苹果','píngguǒ','apple','unit3'],
+      ['香蕉','xiāngjiāo','banana','unit3'], ['火车','huǒchē','train','unit3'], ['飞机','fēijī','airplane','unit3'],
+      ['天气','tiānqì','weather','unit3'], ['太阳','tàiyáng','sun','unit3'], ['月亮','yuèliang','moon','unit3'],
+      ['星星','xīngxing','star','unit3'], ['音乐','yīnyuè','music','unit3'],
+    ];
+  }
+  function buildObjects(rows){
+    return rows.map(([hanzi,pinyin,meaning,unit])=>({
+      id: uid(), hanzi, pinyin, meaning, unit,
+      dkAddedAt: 0, revise1: false, revise2: false, known: false
+    }));
+  }
+
+  function loadAll(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      cards = JSON.parse(raw);
+      // migrate fields if missing
+      let changed = false;
+      for(const c of cards){ if(typeof c.known==='undefined'){ c.known=false; changed=true; } }
+      const hasUnit3 = cards.some(c=>c.unit==='unit3');
+      if(!hasUnit3){ cards = cards.concat(buildObjects(unit3Sample())); changed=true; }
+      if(changed) saveAll();
+    } else {
+      cards = buildObjects([ ...unit1Sample(), ...unit2Sample(), ...unit3Sample() ]);
+      saveAll();
+    }
+  }
+
+  function buildQueue(type){
+    if(type==='unit1') return cards.filter(c=>c.unit==='unit1');
+    if(type==='unit2') return cards.filter(c=>c.unit==='unit2');
+    if(type==='unit3') return cards.filter(c=>c.unit==='unit3');
+    if(type==='known') return cards.filter(c=>c.known);
+    if(type==='revise1') return cards.filter(c=>c.revise1);
+    if(type==='revise2') return cards.filter(c=>c.revise2);
+    return [];
+  }
+
+  function startMission(type){
+    currentMission=type;
+    sessionQueue = buildQueue(type).slice();
+    todayReviewed=0;
+    sessionTotal = sessionQueue.length;
+    sessionCorrect = 0;
+    nextCard();
+    updateStats();
+  }
+
+  function ensureReviseFlags(card){
+    if(!card.dkAddedAt){ card.dkAddedAt = now(); }
+    card.revise1 = true; card.revise2 = true;
+  }
+
+  function answer(knew){
+    if(!currentCard) return;
+    const c = currentCard;
+
+    if(currentMission.startsWith('unit') || currentMission==='known'){
+      if(knew){ c.known = true; }
+      else    { ensureReviseFlags(c); c.known = false; }
+    } else if(currentMission==='revise1'){
+      if(knew){ c.revise1 = false; c.known = true; }
+      else    { ensureReviseFlags(c); c.known = false; }
+    } else if(currentMission==='revise2'){ // To confirm
+      if(knew){ c.revise2 = false; c.known = true; }
+      else    { ensureReviseFlags(c); c.revise1 = true; c.known = false; }
+    }
+
+    if(knew) sessionCorrect++;
+    todayReviewed++;
+    saveAll();
+    nextCard();
+  }
+
+  function nextCard(){
+    flipped=false; cardEl.classList.remove('flip');
+    
+    // Flip animation with delay
+    const cardWrap = document.getElementById('cardWrap');
+    cardWrap.classList.add('card-flip-vert');
+    setTimeout(() => {
+      cardWrap.classList.add('flipping');
+      setTimeout(() => {
+        // Change content at midpoint
+        currentCard=sessionQueue.shift()||null;
+        renderCard(); updateStats();
+        cardWrap.classList.remove('flipping');
+        cardWrap.classList.add('flipped');
+        setTimeout(() => {
+          cardWrap.classList.remove('flipped', 'card-flip-vert');
+        }, 440);
+      }, 220);
+    }, 500);
+  }
+
+  function renderCard(){
+    if(!currentCard){
+      const n = sessionTotal, x = sessionCorrect;
+      backEl.textContent='';
+      frontEl.innerHTML = `<div class="text-3xl font-semibold">${x} / ${n} correct</div>`;
+      return;
+    }
+    
+    if(mode === 'flash'){
+      flashRow.style.display = 'grid';
+      quizRow.style.display = 'none';
+      frontEl.textContent=currentCard.hanzi;
+      backEl.innerHTML = `<div class="mb-2">${currentCard.pinyin}</div><div>${currentCard.meaning}</div>`;
+    } else {
+      flashRow.style.display = 'none';
+      quizRow.style.display = 'grid';
+      setupQuizChoices();
+    }
+  }
+
+  function setMode(newMode){
+    mode = newMode;
+    if(mode!=='flash'){ flipped=false; cardEl.classList.remove('flip'); }
+    if(currentCard) renderCard();
+    updateStats();
+  }
+
+  function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+  function setupQuizChoices(){
+    if(!currentCard) return;
+    
+    // Determine what to show and what to ask for
+    let showField, answerField;
+    if(mode === 'quizPinyin'){
+      showField = 'hanzi';
+      answerField = 'pinyin';
+    } else if(mode === 'quizMeaning'){
+      showField = 'hanzi';
+      answerField = 'meaning';
+    } else if(mode === 'quizHanzi'){
+      // Show pinyin or meaning randomly
+      showField = Math.random() < 0.5 ? 'pinyin' : 'meaning';
+      answerField = 'hanzi';
+    }
+    
+    frontEl.innerHTML = `<div class='text-5xl font-bold flex items-center justify-center h-full'>${currentCard[showField]}</div>`;
+    backEl.innerHTML = '';
+    
+    // Generate options
+    const correct = currentCard[answerField];
+    const pool = cards.filter(c => c[answerField] !== correct && c.unit);
+    const numOptions = 4;
+    let options = [correct];
+    
+    // Add random distractors
+    const shuffled = shuffle(pool);
+    for(let i=0; i<Math.min(numOptions-1, shuffled.length); i++){
+      options.push(shuffled[i][answerField]);
+    }
+    
+    options = shuffle(options);
+    
+    // Create buttons
+    quizRow.innerHTML = '';
+    function setDisabledAll(flag) {
+      Array.from(quizRow.children).forEach(b => b.disabled = flag);
+    }
+    
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'py-3 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-900 text-sm sm:text-base';
+      btn.style.fontSize = '24px';
+      btn.textContent = opt;
+      btn.disabled = false;
+      btn.onclick = function() {
+        this.blur();
+        setDisabledAll(true);
+        const isCorrect = opt === correct;
+        if(isCorrect){
+          btn.classList.add('optCorrect');
+          cardEl.classList.add('popAnim');
+          setTimeout(()=> {
+            btn.classList.remove('optCorrect');
+            cardEl.classList.remove('popAnim');
+            answer(true);
+            setTimeout(()=>setDisabledAll(false), 450);
+          }, 1000);
+        } else {
+          btn.classList.add('optWrong');
+          // Show correct answer
+          Array.from(quizRow.children).forEach((b, i) => {
+            if(options[i] === correct) {
+              b.classList.add('optCorrect');
+            }
+          });
+          cardEl.classList.add('shakeAnim');
+          setTimeout(()=> {
+            btn.classList.remove('optWrong');
+            Array.from(quizRow.children).forEach(b => b.classList.remove('optCorrect'));
+            cardEl.classList.remove('shakeAnim');
+            answer(false);
+            setTimeout(()=>setDisabledAll(false), 450);
+          }, 1500);
+        }
+      };
+      quizRow.appendChild(btn);
+    });
+  }
+
+  function updateStats(){
+    statInSession.textContent=sessionQueue.length+(currentCard?1:0);
+    statToday.textContent=todayReviewed;
+    statMission.textContent=currentMission;
+    
+    // contadores
+    const countKnown = cards.filter(c=>c.known).length;
+    const countRev1  = cards.filter(c=>c.revise1).length;
+    const countRev2  = cards.filter(c=>c.revise2).length;
+    document.getElementById('countRev1').textContent = countRev1;
+    document.getElementById('countRev2').textContent = countRev2;
+    document.getElementById('countKnown').textContent = countKnown;
+
+    // Detectar incrementos y animar botones
+    if(typeof updateStats.prevCountKnown !== 'undefined' && countKnown > updateStats.prevCountKnown) {
+      triggerButtonGlow('btnKnown');
+    }
+    if(typeof updateStats.prevCountRev1 !== 'undefined' && countRev1 > updateStats.prevCountRev1) {
+      triggerButtonGlow('btnRevise1');
+    }
+    if(typeof updateStats.prevCountRev2 !== 'undefined' && countRev2 > updateStats.prevCountRev2) {
+      triggerButtonGlow('btnRevise2');
+    }
+    // Guardar valores actuales
+    updateStats.prevCountKnown = countKnown;
+    updateStats.prevCountRev1 = countRev1;
+    updateStats.prevCountRev2 = countRev2;
+  }
+
+  function triggerButtonGlow(buttonId) {
+    const btn = document.getElementById(buttonId);
+    if(!btn) return;
+    btn.classList.remove('button-glow-animation');
+    void btn.offsetWidth; // Force reflow
+    btn.classList.add('button-glow-animation');
+    setTimeout(() => btn.classList.remove('button-glow-animation'), 600);
+  }
+
+  // Controls
+  document.getElementById('btnUnit1').onclick=()=>startMission('unit1');
+  document.getElementById('btnUnit2').onclick=()=>startMission('unit2');
+  document.getElementById('btnUnit3').onclick=()=>startMission('unit3');
+  document.getElementById('btnKnown').onclick=()=>startMission('known');
+  document.getElementById('btnRevise1').onclick=()=>startMission('revise1');
+  document.getElementById('btnRevise2').onclick=()=>startMission('revise2');
+
+  document.getElementById('btnQuizPinyin').onclick=()=>setMode('quizPinyin');
+  document.getElementById('btnQuizMeaning').onclick=()=>setMode('quizMeaning');
+  document.getElementById('btnQuizHanzi').onclick=()=>setMode('quizHanzi');
+
+  document.getElementById('btnKnow').onclick=()=>answer(true);
+  document.getElementById('btnDontKnow').onclick=()=>answer(false);
+  document.getElementById('btnFlip').onclick=()=>{ flipped=!flipped; flipped?cardEl.classList.add('flip'):cardEl.classList.remove('flip'); };
+  cardEl.onclick=()=>{ if(currentCard){ flipped=!flipped; flipped?cardEl.classList.add('flip'):cardEl.classList.remove('flip'); } };
+  window.onkeydown=(e)=>{ if(e.code==='ArrowLeft'){answer(false);} else if(e.code==='ArrowRight'){answer(true);} else if(e.code==='Space'){e.preventDefault(); flipped=!flipped; flipped?cardEl.classList.add('flip'):cardEl.classList.remove('flip'); } };
+
+  loadAll(); renderCard(); updateStats();
+  </script>
+</body>
+</html>

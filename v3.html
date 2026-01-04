@@ -1,0 +1,877 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flashcards MacaLaoshi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="theme-color" content="#0f172a" />
+  <style>
+    /* ---------- Base / flipping ---------- */
+    .flip { transform: rotateY(180deg); }
+    .preserve-3d { transform-style: preserve-3d; }
+    .backface-hidden { backface-visibility: hidden; }
+    .rotateY180 { transform: rotateY(180deg); }
+    .perspective { perspective: 1000px; }
+    .hidden { display: none; }
+
+    /* ---------- Animaciones de feedback ---------- */
+    @keyframes pop {
+      0%   { transform: scale(1);   box-shadow: 0 0 0 rgba(16,185,129,0); }
+      30%  { transform: scale(1.09);box-shadow: 0 0 45px rgba(16,185,129,.55); }
+      100% { transform: scale(1);   box-shadow: 0 0 0 rgba(16,185,129,0); }
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%     { transform: translateX(-8px); }
+      40%     { transform: translateX(8px); }
+      60%     { transform: translateX(-6px); }
+      80%     { transform: translateX(6px); }
+    }
+    .popAnim   { animation: pop   420ms ease-out; }
+    .shakeAnim { animation: shake 420ms ease; }
+
+    @keyframes pulseGlow {
+      0%   { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+      50%  { box-shadow: 0 0 24px 8px var(--glow); }
+      100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+    }
+    .pulseBadge { animation: pulseGlow 700ms ease-out; }
+    .pulseGreen { --glow: rgba(16,185,129,.85); } /* known */
+    .pulseAmber { --glow: rgba(245,158,11,.85); } /* revise1 */
+    .pulseTeal  { --glow: rgba(20,184,166,.85); } /* revise2 */
+
+    /* ---------- Estado de opciones en QUIZ ---------- */
+    .optCorrect {
+      background-color: #059669 !important;
+      color: #fff !important;
+      box-shadow: 0 0 26px rgba(16,185,129,.75) !important;
+      transform: scale(1.02);
+    }
+    .optWrong {
+      background-color: #dc2626 !important;
+      color: #fff !important;
+      box-shadow: 0 0 20px rgba(220,38,38,.7) !important;
+    }
+
+    /* ---------- Tema “Desafío” ---------- */
+    .challenge-bg   { background-color: #4c1d95 !important; } /* morado profundo */
+    .challenge-stat { background-color: #6d28d9 !important; } /* morado vivo */
+
+    /* ---------- Overlay Tabla Conocidas ---------- */
+    .overlay {
+      position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center;
+      background: rgba(2,6,23,.75);
+    }
+    .overlayCard { width: min(1100px, 95vw); height: min(90vh, 900px); }
+    /* Scroll for known table grid */
+/* Scroll for known table grid - responsivo a la ventana */
+    #knownGrid {
+  /* Solo grid, sin scroll ni max-height */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 12px;
+    }
+
+    .squareCell{
+      aspect-ratio:1/1;
+      display:flex; align-items:center; justify-content:center;
+      position: relative;
+      overflow:hidden; white-space:nowrap; padding:10px;
+      text-align:center; user-select:none;
+    }
+    .streak-badge{
+      position:absolute; right:6px; bottom:6px;
+      padding:2px 6px; border-radius:10px; font-size:12px; font-weight:700;
+      color:#0B1020; background:#3B82F6;
+      box-shadow:0 0 10px rgba(0,0,0,.25);
+    }
+  </style>
+</head>
+<body id="body" class="min-h-screen bg-slate-950 text-slate-100">
+  <div class="max-w-3xl mx-auto p-4 sm:p-6">
+
+    <!-- ---------- Encabezado ---------- -->
+    <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Tarjetas de chino · Unidades</h1>
+      <div class="flex flex-wrap gap-2">
+        <div class="relative">
+          <button id="btnNivel1" class="px-4 py-2 rounded-2xl bg-indigo-700 hover:bg-indigo-600 font-semibold">Nivel 1 ▼</button>
+          <div id="nivel1Box" class="absolute left-0 mt-2 bg-slate-900 border border-slate-700 rounded-2xl shadow-lg p-3 flex flex-col gap-2 z-30 hidden min-w-[180px]">
+            <button id="btnUnit2" class="px-4 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500">Unidad 2</button>
+            <button id="btnUnit3" class="px-4 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500">Unidad 3</button>
+            <button id="btnUnit4" class="px-4 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500">Unidad 4</button>
+            <button id="btnUnit5" class="px-4 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500">Unidad 5</button>
+            <button id="btnUnit6" class="px-4 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500">Unidad 6</button>
+            <button id="btnUnit7" class="px-4 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500">Unidad 7</button>
+            <button id="btnUnit8" class="px-4 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500">Unidad 8</button>
+            <button id="btnUnit9" class="px-4 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500">Unidad 9</button>
+          </div>
+        </div>
+
+        <button id="btnKnown" class="px-4 py-2 rounded-2xl bg-emerald-700/80 hover:bg-emerald-700">
+          Conocidas <span id="countKnown" class="opacity-80">0</span>
+        </button>
+        <button id="btnRevise1" class="px-4 py-2 rounded-2xl bg-amber-600/80 hover:bg-amber-600">
+          A repasar <span id="countRev1" class="opacity-80">0</span>
+        </button>
+        <button id="btnRevise2" class="px-4 py-2 rounded-2xl bg-teal-600/80 hover:bg-teal-600">
+          Para confirmar <span id="countRev2" class="opacity-80">0</span>
+        </button>
+
+        <button id="btnChallenge" class="px-4 py-2 rounded-2xl bg-fuchsia-700/80 hover:bg-fuchsia-700">Desafío</button>
+
+        <button id="btnQuizPinyin" class="px-4 py-2 rounded-2xl bg-purple-600 hover:bg-purple-500">Quiz Pinyin</button>
+        <button id="btnQuizMeaning" class="px-4 py-2 rounded-2xl bg-purple-600 hover:bg-purple-500">Quiz Significado</button>
+
+        <button id="btnKnownTable" class="px-4 py-2 rounded-2xl bg-slate-800 hover:bg-slate-700 ring-1 ring-white/10">Tabla Conocidas</button>
+
+        <button id="btnReset" class="px-4 py-2 rounded-2xl bg-rose-600 hover:bg-rose-500">Reiniciar progreso</button>
+      </div>
+    </header>
+
+    <!-- ---------- Estado ---------- -->
+    <section class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+      <div class="bg-slate-900/60 rounded-xl p-3">
+        <div class="text-slate-400">En sesión</div>
+        <div id="statInSession" class="text-xl font-semibold">0</div>
+      </div>
+      <div class="bg-slate-900/60 rounded-xl p-3">
+        <div class="text-slate-400">Revisadas hoy</div>
+        <div id="statToday" class="text-xl font-semibold">0</div>
+      </div>
+      <div id="statBox" class="bg-slate-900/60 rounded-xl p-3">
+        <div class="text-slate-400">Actual</div>
+        <div id="statMission" class="text-xl font-semibold">—</div>
+      </div>
+      <div class="bg-slate-900/60 rounded-xl p-3">
+        <div class="text-slate-400">Último desafío</div>
+        <div id="statLastChallenge" class="text-xl font-semibold">—</div>
+      </div>
+    </section>
+
+    <!-- ---------- Tarjeta ---------- -->
+    <main class="mt-6">
+      <div id="cardWrap" class="relative h-72 sm:h-80 select-none perspective">
+        <div id="card" class="absolute inset-0 rounded-3xl bg-slate-900/70 ring-1 ring-white/10 shadow-xl flex items-center justify-center text-center preserve-3d transition-transform duration-300 will-change-transform">
+          <div id="cardFront" class="absolute inset-0 flex items-center justify-center backface-hidden text-5xl font-bold"></div>
+          <div id="cardBack" class="absolute inset-0 flex flex-col items-center justify-center rotateY180 backface-hidden text-2xl leading-relaxed whitespace-pre-line"></div>
+        </div>
+      </div>
+
+      <!-- Controles modo FLASH -->
+      <div id="flashRow" class="mt-4 grid grid-cols-3 gap-2">
+        <button id="btnDontKnow" class="py-3 rounded-2xl bg-slate-800 hover:bg-slate-700">← No la sé</button>
+        <button id="btnFlip"     class="py-3 rounded-2xl bg-slate-800 hover:bg-slate-700">Voltear</button>
+        <button id="btnKnow"     class="py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500">La sabía →</button>
+      </div>
+
+      <!-- Controles modo QUIZ (opciones dinámicas) -->
+      <div id="quizRow" class="mt-4 grid grid-cols-2 gap-2 hidden"></div>
+
+      <p class="mt-3 text-slate-400 text-xs sm:text-sm">
+        Consejos: clic/tap para voltear la tarjeta. Teclado: Izquierda = No la sé, Espacio = Voltear, Derecha = La sabía.
+      </p>
+    </main>
+  </div>
+
+  <!-- ========= Overlay: Tabla Conocidas ========= -->
+  <section class="mt-8">
+    <h2 class="text-lg font-semibold mb-2">Tabla de conocidas</h2>
+    <div class="flex items-center gap-2 flex-wrap mb-2">
+      <span id="knownCount" class="text-slate-400 text-sm">0</span>
+      <div class="flex items-center gap-2">
+        <button id="btnShowHanzi" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 ring-1 ring-white/10">汉字</button>
+        <button id="btnShowPinyin" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 ring-1 ring-white/10">Pinyin</button>
+        <button id="btnShowMeaning" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 ring-1 ring-white/10">Significado</button>
+      </div>
+    </div>
+  <div id="knownGrid" class="mx-2 sm:mx-8"></div>
+  </section>
+
+  <script>
+  /* ========= Estado y setup ========= */
+  const STORAGE_KEY = 'srs_unidades_v7_es';
+
+  let cards = [];
+  let sessionQueue = [];
+  let currentCard = null;
+  let flipped = false;
+  let todayReviewed = 0;
+  let currentMission = ''; // 'unit2'..'unit9'|'known'|'revise1'|'revise2'|'challenge'
+  let sessionTotal = 0;
+  let sessionCorrect = 0;
+  // 'flash' | 'quizPinyin' | 'quizMeaning'
+  let mode = 'flash';
+
+  /* ========= DOM ========= */
+  const bodyEl  = document.getElementById('body');
+  const cardEl  = document.getElementById('card');
+  const frontEl = document.getElementById('cardFront');
+  const backEl  = document.getElementById('cardBack');
+
+  const statInSession = document.getElementById('statInSession');
+  const statToday     = document.getElementById('statToday');
+  const statMission   = document.getElementById('statMission');
+  const statBox       = document.getElementById('statBox');
+  const statLastChallenge = document.getElementById('statLastChallenge');
+
+  const flashRow = document.getElementById('flashRow');
+  const quizRow  = document.getElementById('quizRow');
+
+  const btnKnownBox   = document.getElementById('btnKnown');
+  const btnRevise1Box = document.getElementById('btnRevise1');
+  const btnRevise2Box = document.getElementById('btnRevise2');
+
+  /* Overlay conocidos */
+  const knownOverlay  = document.getElementById('knownOverlay');
+  const knownGrid     = document.getElementById('knownGrid');
+  const knownCount    = document.getElementById('knownCount');
+
+  /* ========= Utils ========= */
+  function uid(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
+  function now(){ return Date.now(); }
+  function hoursSince(ts){ if(!ts) return null; const diffMs = Date.now() - ts; return Math.floor(diffMs / 3600000); }
+  function saveAll(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(cards)); }
+  function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+  function dedupeByHanzi(rows){
+    const seen = new Set(); const out = [];
+    for(const r of rows){ const key = r[0]; if(seen.has(key)) continue; seen.add(key); out.push(r); }
+    return out;
+  }
+
+  /* ========= Audio (WebAudio) ========= */
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  async function ensureAudio(){ try { if(audioCtx.state !== 'running') await audioCtx.resume(); } catch(e){} }
+  function beep(freq=440, duration=0.12, type='sine', gain=0.05){
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.value = gain;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+    o.stop(audioCtx.currentTime + duration);
+  }
+  function soundCorrect(){
+    // Sonido corto y satisfactorio para respuesta correcta
+    beep(880, 0.09, 'triangle', 0.09);
+    setTimeout(() => beep(1175, 0.08, 'triangle', 0.07), 60);
+  }
+
+  // Sonido de celebración para x/x correctas
+  function soundCelebration(){
+    // Arpegio digital más largo y alegre
+    const notes = [523, 659, 784, 988, 1175, 1318, 1568, 1760, 2093]; // C5, E5, G5, B5, D6, E6, G6, A6, C7
+    const types = ['triangle','triangle','triangle','sine','sine','triangle','triangle','sine','triangle'];
+    notes.forEach((freq, i) => {
+      setTimeout(() => beep(freq, 0.13, types[i], 0.10 - i*0.008), i * 70);
+    });
+    // Un "bling" final
+    setTimeout(() => beep(2637, 0.18, 'triangle', 0.14), notes.length * 70 + 40);
+  }
+  function soundWrong(){
+    // Efecto digital tipo "fart" corto
+    // Secuencia descendente y distorsionada
+    const ctx = audioCtx;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(110, ctx.currentTime);
+    o.frequency.linearRampToValueAtTime(55, ctx.currentTime + 0.18);
+    g.gain.setValueAtTime(0.18, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.18);
+    o.connect(g); g.connect(ctx.destination);
+    o.start();
+    o.stop(ctx.currentTime + 0.19);
+    // "pop" final
+    setTimeout(() => beep(70, 0.07, 'triangle', 0.08), 170);
+  }
+
+  /* ========= Datasets (ES) ========= */
+  // Unidad 2
+  function unit2Sample(){
+    return [
+      ['一','yī','uno','unit2'], ['二','èr','dos','unit2'], ['三','sān','tres','unit2'], ['四','sì','cuatro','unit2'], ['五','wǔ','cinco','unit2'],
+      ['六','liù','seis','unit2'], ['七','qī','siete','unit2'], ['八','bā','ocho','unit2'], ['九','jiǔ','nueve','unit2'], ['十','shí','diez','unit2'],
+      ['谢谢','xièxie','gracias','unit2'], ['不客气','bú kèqi','de nada','unit2'], ['对不起','duìbuqǐ','perdón','unit2'],
+      ['没关系','méiguānxi','no pasa nada','unit2'], ['大家好','dàjiā hǎo','hola a todos','unit2'],
+    ];
+  }
+  // Unidad 3
+  function unit3Sample(){
+    return [
+      ['你','nǐ','tú','unit3'], ['我','wǒ','yo','unit3'], ['是','shì','ser','unit3'], ['很','hěn','muy','unit3'], ['高兴','gāoxìng','contento / feliz','unit3'],
+      ['认识','rènshi','conocer','unit3'], ['呢','ne','partícula de seguimiento','unit3'], ['吗','ma','partícula interrogativa','unit3'], ['也','yě','también','unit3'], ['您','nín','usted (formal)','unit3'],
+      ['喜欢','xǐhuan','gustar','unit3'], ['学','xué','aprender / estudiar','unit3'], ['汉语','hànyǔ','chino (idioma)','unit3'], ['学生','xuésheng','estudiante','unit3'], ['老师','lǎoshī','profesor','unit3'], ['再见','zàijiàn','adiós','unit3'],
+    ];
+  }
+  // Unidad 4
+  function unit4Sample(){
+    return [
+      ['叫','jiào','llamarse / llamar','unit4'], ['什么','shénme','qué','unit4'], ['名字','míngzi','nombre','unit4'], ['多大','duōdà','qué edad / cuán grande','unit4'],
+      ['岁','suì','años (de edad)','unit4'], ['人','rén','persona / gente','unit4'], ['中国','Zhōngguó','China','unit4'],
+      ['不','bù','no (negación)','unit4'], ['哪','nǎ','cuál (de) / qué lugar','unit4'],
+    ];
+  }
+  // Unidad 5
+  function unit5Sample(){
+    return [
+      ['想','xiǎng','querer / pensar','unit5'], ['吃','chī','comer','unit5'], ['做','zuò','hacer','unit5'], ['饭','fàn','comida','unit5'], ['喝','hē','beber','unit5'],
+      ['茶','chá','té','unit5'], ['水','shuǐ','agua','unit5'], ['咖啡','kāfēi','café (bebida)','unit5'], ['说','shuō','hablar / decir','unit5'], ['唱','chàng','cantar','unit5'],
+      ['歌','gē','canción','unit5'], ['看','kàn','ver / mirar','unit5'], ['书','shū','libro','unit5'], ['电影','diànyǐng','película','unit5'], ['电视剧','diànshìjù','serie de TV','unit5'],
+      ['听','tīng','escuchar','unit5'], ['音乐','yīnyuè','música','unit5'],
+    ];
+  }
+  // Unidad 6
+  function unit6Sample(){
+    return [
+      ['他','tā','él','unit6'], ['她','tā','ella','unit6'], ['们','men','sufijo plural','unit6'], ['谁','shéi','quién','unit6'], ['的','de','partícula posesiva','unit6'],
+      ['朋友','péngyou','amigo / amiga','unit6'], ['男','nán','hombre / masculino','unit6'], ['女','nǚ','mujer / femenino','unit6'], ['爸爸','bàba','papá','unit6'], ['妈妈','māma','mamá','unit6'],
+      ['哥哥','gēge','hermano mayor','unit6'], ['弟弟','dìdi','hermano menor','unit6'], ['姐姐','jiějie','hermana mayor','unit6'], ['妹妹','mèimei','hermana menor','unit6'],
+      ['儿子','érzi','hijo (varón)','unit6'], ['女儿','nǚ’ér','hija','unit6'], ['帅','shuài','guapo','unit6'], ['漂亮','piàoliang','bonita / guapa','unit6'], ['聪明','cōngming','inteligente','unit6'],
+      ['老公','lǎogōng','esposo','unit6'], ['老婆','lǎopo','esposa','unit6'],
+    ];
+  }
+  // Unidad 7
+  function unit7Sample(){
+    return [
+      ['特别','tèbié','especialmente / muy','unit7'], ['非常','fēicháng','muy / muchísimo','unit7'], ['觉得','juéde','creer / opinar / sentir que','unit7'], ['怎么样','zěnmeyàng','qué tal','unit7'],
+      ['好看','hǎokàn','bonito (de ver)','unit7'], ['好吃','hǎochī','rico (de comer)','unit7'], ['好听','hǎotīng','agradable de oír','unit7'], ['有意思','yǒuyìsi','interesante','unit7'],
+      ['这','zhè','este / esta','unit7'], ['那','nà','ese / esa / aquel','unit7'],
+      ['个','gè','clasificador general','unit7'], ['本','běn','clasificador de libros','unit7'], ['首','shǒu','clasificador de canciones','unit7'], ['杯','bēi','clasificador: vaso / taza','unit7'],
+    ];
+  }
+  // Unidad 8
+  function unit8Sample(){
+    return [
+      ['为什么','wèishénme','por qué','unit8'], ['因为','yīnwèi','porque','unit8'], ['演员','yǎnyuán','actor / actriz','unit8'], ['歌手','gēshǒu','cantante','unit8'],
+      ['网红','wǎnghóng','influencer','unit8'], ['可爱','kě’ài','tierno / adorable','unit8'], ['有名','yǒumíng','famoso','unit8'], ['浪漫','làngmàn','romántico','unit8'],
+      ['感动人','gǎndòng rén','conmovedor','unit8'], ['棒','bàng','genial','unit8'], ['酷','kù','cool','unit8'], ['有','yǒu','haber / tener','unit8'], ['和','hé','y (conjunción)','unit8'], ['没','méi','no hay / no tener','unit8'],
+    ];
+  }
+  // Unidad 9
+  function unit9Sample(){
+    return [
+      ['在','zài','estar / en','unit9'], ['家','jiā','casa / hogar','unit9'], ['学校','xuéxiào','escuela','unit9'], ['电影院','diànyǐngyuàn','cine','unit9'],
+      ['商店','shāngdiàn','tienda','unit9'], ['咖啡店','kāfēi diàn','cafetería','unit9'], ['饭店','fàndiàn','restaurante / hotel','unit9'], ['超市','chāoshì','supermercado','unit9'],
+      ['公园','gōngyuán','parque','unit9'], ['工作','gōngzuò','trabajar / trabajo','unit9'], ['买','mǎi','comprar','unit9'], ['东西','dōngxi','cosas / objetos','unit9'],
+      ['这儿','zhèr','aquí','unit9'], ['那儿','nàr','allí','unit9'], ['哪儿','nǎr','dónde','unit9'], ['手机','shǒujī','teléfono móvil','unit9'], ['电脑','diànnǎo','computadora','unit9'],
+    ];
+  }
+
+  function buildObjects(rows){
+    return rows.map(([hanzi,pinyin,meaning,unit])=>({
+      id: uid(), hanzi, pinyin, meaning, unit,
+      dkAddedAt: 0, revise1: false, revise2: false, known: false,
+      challengeStreak: 0, challengeBest: 0, lastChallengeAt: 0
+    }));
+  }
+
+  /* ========= Carga ========= */
+  function loadAll(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      cards = JSON.parse(raw);
+      // Migración de campos nuevos
+      let migrated = false;
+      for(const c of cards){
+        if(typeof c.known==='undefined'){ c.known=false; migrated=true; }
+        if(typeof c.challengeStreak==='undefined'){ c.challengeStreak=0; migrated=true; }
+        if(typeof c.challengeBest==='undefined'){ c.challengeBest=0; migrated=true; }
+        if(typeof c.lastChallengeAt==='undefined'){ c.lastChallengeAt=0; migrated=true; }
+      }
+      if(migrated) saveAll();
+    } else {
+      const rows = dedupeByHanzi([
+        ...unit2Sample(), ...unit3Sample(), ...unit4Sample(), ...unit5Sample(),
+        ...unit6Sample(), ...unit7Sample(), ...unit8Sample(), ...unit9Sample()
+      ]);
+      cards = buildObjects(rows);
+      saveAll();
+    }
+  }
+
+  /* ========= Lógica ========= */
+  function buildQueue(type){
+    if(type==='unit2') return cards.filter(c=>c.unit==='unit2');
+    if(type==='unit3') return cards.filter(c=>c.unit==='unit3');
+    if(type==='unit4') return cards.filter(c=>c.unit==='unit4');
+    if(type==='unit5') return cards.filter(c=>c.unit==='unit5');
+    if(type==='unit6') return cards.filter(c=>c.unit==='unit6');
+    if(type==='unit7') return cards.filter(c=>c.unit==='unit7');
+    if(type==='unit8') return cards.filter(c=>c.unit==='unit8');
+    if(type==='unit9') return cards.filter(c=>c.unit==='unit9');
+    if(type==='known') return cards.filter(c=>c.known);
+    if(type==='revise1') return cards.filter(c=>c.revise1);
+    if(type==='revise2') return cards.filter(c=>c.revise2);
+    if(type==='challenge') return shuffle(cards.filter(c=>c.known)).slice(0,10);
+    return [];
+  }
+
+  function startMission(type){
+    currentMission = type;
+    sessionQueue = buildQueue(type).slice();
+    todayReviewed = 0;
+    sessionTotal = sessionQueue.length;
+    sessionCorrect = 0;
+
+    if(type==='challenge'){
+      setMode('quizMeaning');                 // SOLO quiz en desafío
+      bodyEl.classList.add('challenge-bg');   // fondo morado
+      statBox.classList.add('challenge-stat');// “Actual” morado
+      // marca de último desafío "global"
+      // (usamos la tarjeta que respondas para actualizar valor real/hora)
+    } else {
+      setMode('flash');
+      bodyEl.classList.remove('challenge-bg');
+      statBox.classList.remove('challenge-stat');
+    }
+
+    nextCard();
+    updateStats();
+  }
+
+  function ensureReviseFlags(card){
+    if(!card.dkAddedAt){ card.dkAddedAt = now(); }
+    card.revise1 = true; card.revise2 = true; card.known = false;
+  }
+
+  /* ===== Feedback visual/sonoro y resaltado de cajas ===== */
+  function pulseBox(el, colorClass){
+    if(!el) return;
+    el.classList.remove('pulseBadge','pulseGreen','pulseAmber','pulseTeal');
+    void el.offsetWidth; // reflow para reiniciar animación
+    el.classList.add('pulseBadge', colorClass);
+    setTimeout(()=>{ el.classList.remove('pulseBadge','pulseGreen','pulseAmber','pulseTeal'); }, 750);
+  }
+  async function feedbackCorrect(){
+    await ensureAudio();
+    cardEl.classList.remove('shakeAnim'); void cardEl.offsetWidth;
+    cardEl.classList.add('popAnim');
+    soundCorrect();
+    pulseBox(btnKnownBox, 'pulseGreen');
+  }
+  async function feedbackWrong(){
+    await ensureAudio();
+    cardEl.classList.remove('popAnim'); void cardEl.offsetWidth;
+    cardEl.classList.add('shakeAnim');
+    soundWrong();
+    pulseBox(btnRevise1Box, 'pulseAmber');
+    pulseBox(btnRevise2Box, 'pulseTeal');
+  }
+
+  // Llama feedback y pasa a siguiente tras una breve pausa
+  function respond(knew){
+    if(knew) feedbackCorrect(); else feedbackWrong();
+    setTimeout(()=>{ answer(knew); }, 420);
+  }
+
+  function answer(knew){
+    if(!currentCard) return;
+    const c = currentCard;
+
+    if(currentMission==='challenge'){
+      // actualizar racha y última hora
+      c.lastChallengeAt = now();
+      if(knew){
+        c.challengeStreak++;
+        c.challengeBest = Math.max(c.challengeBest, c.challengeStreak);
+      } else {
+        c.challengeStreak = 0;
+        ensureReviseFlags(c); // sale de conocidas -> repaso/confirmar
+      }
+    } else if(currentMission.startsWith('unit') || currentMission==='known'){
+      if(knew){ c.known = true; }
+      else    { ensureReviseFlags(c); }
+    } else if(currentMission==='revise1'){
+      if(knew){ c.revise1 = false; c.known = true; }
+      else    { ensureReviseFlags(c); }
+    } else if(currentMission==='revise2'){
+      if(knew){ c.revise2 = false; c.known = true; }
+      else    { ensureReviseFlags(c); c.revise1 = true; }
+    }
+
+    if(knew) sessionCorrect++;
+    todayReviewed++;
+    saveAll();
+    nextCard();
+  }
+
+  function nextCard(){
+    flipped = false; cardEl.classList.remove('flip');
+    currentCard = sessionQueue.shift() || null;
+    renderCard();
+    updateStats();
+    // limpiar animaciones para la próxima
+    cardEl.classList.remove('popAnim','shakeAnim');
+  }
+
+  function renderCard(){
+    if(!currentCard){
+      const n = sessionTotal, x = sessionCorrect;
+      const percent = n > 0 ? Math.round((x / n) * 100) : 0;
+      backEl.textContent = '';
+      frontEl.innerHTML = `<div class="text-3xl font-semibold">${x} / ${n} correctas</div>`;
+      // Prevent flipping on results card
+      cardEl.classList.remove('flip');
+      cardEl.onclick = null;
+      document.getElementById('btnFlip').disabled = true;
+      // Sonido y confetti de celebración si >= 85%
+      if (percent >= 85) {
+        showConfetti();
+        soundCelebration();
+      }
+      return;
+    }
+    // Frente: siempre hanzi
+    frontEl.textContent = currentCard.hanzi;
+
+    // Enable flipping for normal cards
+    cardEl.onclick = () => {
+      if(currentCard && mode==='flash'){
+        flipped = !flipped;
+        flipped ? cardEl.classList.add('flip') : cardEl.classList.remove('flip');
+      }
+    };
+    document.getElementById('btnFlip').disabled = false;
+
+    if(mode === 'flash'){
+      backEl.innerHTML = `<div class="mb-2">${currentCard.pinyin}</div><div>${currentCard.meaning}</div>`;
+      flashRow.classList.remove('hidden');
+      quizRow.classList.add('hidden');
+    } else {
+      backEl.textContent = '';
+      flashRow.classList.add('hidden');
+      quizRow.classList.remove('hidden');
+      setupQuizChoices();
+    }
+  }
+
+// Confetti effect for celebration - versión solo verde
+function showConfetti() {
+  let confettiCanvas = document.getElementById('confettiCanvas');
+  if (!confettiCanvas) {
+    confettiCanvas = document.createElement('canvas');
+    confettiCanvas.id = 'confettiCanvas';
+    confettiCanvas.style.position = 'fixed';
+    confettiCanvas.style.left = '0';
+    confettiCanvas.style.top = '0';
+    confettiCanvas.style.width = '100vw';
+    confettiCanvas.style.height = '100vh';
+    confettiCanvas.style.pointerEvents = 'none';
+    confettiCanvas.style.zIndex = '9999';
+    document.body.appendChild(confettiCanvas);
+  }
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+
+  const ctx = confettiCanvas.getContext('2d');
+  const colors = ['#22c55e','#16a34a','#10b981','#34d399','#86efac','#166534'];
+  const pieces = 140;
+  const confetti = [];
+
+  // Get card position for explosion origin
+  const cardRect = cardEl.getBoundingClientRect();
+  const originX = cardRect.left + cardRect.width/2;
+  const originY = cardRect.bottom - 10; // just below the card
+
+  for (let i = 0; i < pieces; i++) {
+    const angle = Math.PI/2 + (Math.random()-0.5)*Math.PI/1.2; // mostly upward
+    const speed = Math.random()*7+6;
+    confetti.push({
+      x: originX,
+      y: originY,
+      r: Math.random() * 8 + 4,
+      c: colors[Math.floor(Math.random() * colors.length)],
+      vx: Math.cos(angle)*speed,
+      vy: -Math.abs(Math.sin(angle)*speed*1.5), // 50% más alto
+      alpha: 1,
+      gravity: 0.25 + Math.random()*0.15,
+      fade: 0.012 + Math.random()*0.008
+    });
+  }
+
+  let frames = 0;
+  function draw() {
+    ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    for (const p of confetti) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, 2 * Math.PI);
+      ctx.fillStyle = p.c;
+      ctx.globalAlpha = p.alpha;
+      ctx.fill();
+      ctx.restore();
+
+      // Movimiento: primero suben, luego caen y se desvanecen
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += p.gravity;
+      if (frames > 30) p.alpha -= p.fade; // fade out after some frames
+      if (p.alpha < 0) p.alpha = 0;
+    }
+    frames++;
+    if (frames < 90) {
+      requestAnimationFrame(draw);
+    } else {
+      confettiCanvas.remove();
+    }
+  }
+  draw();
+}
+
+
+  /* ========= QUIZ ========= */
+  function setupQuizChoices(){
+    // Asegurar 4 botones
+    if(quizRow.children.length !== 4){
+      quizRow.innerHTML = '';
+      for(let i=0;i<4;i++){
+        const btn = document.createElement('button');
+        btn.className = 'quizOpt py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-sm sm:text-base';
+        quizRow.appendChild(btn);
+      }
+    }
+    const quizBtns = Array.from(quizRow.children);
+
+    // Generar opciones desde el pool actual de la misión (o todas si vacío)
+    const pool = buildQueue(currentMission);
+    const source = pool.length ? pool : cards;
+
+    const field   = (mode==='quizPinyin') ? 'pinyin' : 'meaning';
+    const correct = currentCard[field];
+
+    const values = new Set([correct]);
+    const distractors = [];
+    const candidates = shuffle(source.filter(c => c.id !== currentCard.id));
+    for(const c of candidates){
+      const v = c[field];
+      if(!values.has(v)){ values.add(v); distractors.push(v); }
+      if(distractors.length===3) break;
+    }
+    while(distractors.length<3){ distractors.push('—'); } // fallback
+
+    const options = shuffle([correct, ...distractors]);
+
+    function setDisabledAll(flag){ quizBtns.forEach(b=>b.disabled=flag); }
+
+    quizBtns.forEach((btn, idx) => {
+      btn.classList.remove('optCorrect','optWrong');
+      btn.textContent = options[idx];
+      btn.onclick = () => {
+        const isCorrect = options[idx] === correct;
+        btn.classList.add(isCorrect ? 'optCorrect' : 'optWrong');
+        setDisabledAll(true);
+        respond(isCorrect); // (sonido/animación UNA vez)
+        setTimeout(()=>setDisabledAll(false), 450);
+      };
+    });
+  }
+
+  /* ========= Modo/UI ========= */
+  function setMode(newMode){
+    // En Desafío, no permitimos modo Flash
+    if(currentMission==='challenge' && newMode==='flash'){
+      mode = 'quizMeaning';
+    } else {
+      mode = newMode;
+    }
+    if(mode!=='flash'){ flipped=false; cardEl.classList.remove('flip'); }
+    if(currentCard) renderCard();
+    updateStats();
+  }
+
+  function updateLastChallengeBox(){
+    // Tomamos el último timeStamp entre todas las tarjetas
+    const lastTs = Math.max(0, ...cards.map(c => c.lastChallengeAt || 0));
+    const h = hoursSince(lastTs);
+    statLastChallenge.textContent = h==null || h<0 ? '—' : (h === 0 ? 'hace <1 h' : `hace ${h} h`);
+  }
+
+  function updateStats(){
+    statInSession.textContent = sessionQueue.length + (currentCard ? 1 : 0);
+    statToday.textContent = todayReviewed;
+    statMission.textContent = (
+      currentMission==='unit2' ? 'Unidad 2' :
+      currentMission==='unit3' ? 'Unidad 3' :
+      currentMission==='unit4' ? 'Unidad 4' :
+      currentMission==='unit5' ? 'Unidad 5' :
+      currentMission==='unit6' ? 'Unidad 6' :
+      currentMission==='unit7' ? 'Unidad 7' :
+      currentMission==='unit8' ? 'Unidad 8' :
+      currentMission==='unit9' ? 'Unidad 9' :
+      currentMission==='known' ? 'Conocidas' :
+      currentMission==='revise1' ? 'A repasar' :
+      currentMission==='revise2' ? 'Para confirmar' :
+      currentMission==='challenge' ? 'Desafío' : '—'
+    );
+    // contadores
+    const countKnown = cards.filter(c=>c.known).length;
+    const countRev1  = cards.filter(c=>c.revise1).length;
+    const countRev2  = cards.filter(c=>c.revise2).length;
+    const elKnown = document.getElementById('countKnown'); if(elKnown) elKnown.textContent = countKnown;
+    const elR1    = document.getElementById('countRev1');  if(elR1)   elR1.textContent   = countRev1;
+    const elR2    = document.getElementById('countRev2');  if(elR2)   elR2.textContent   = countRev2;
+
+    updateLastChallengeBox();
+  }
+
+  /* ========= Tabla Conocidas ========= */
+  let overlayField = 'hanzi'; // 'hanzi' | 'pinyin' | 'meaning'
+  // Overlay removed: no-op
+
+  // Interpolación azul -> naranja para la racha
+  const COLOR_A = { r: 59, g: 130, b: 246 };   // #3B82F6
+  const COLOR_B = { r: 255, g: 134, b: 35  };  // #FF8623
+  function lerp(a,b,t){ return a + (b-a)*t; }
+  function mixColor(t){
+    const r = Math.round(lerp(COLOR_A.r, COLOR_B.r, t));
+    const g = Math.round(lerp(COLOR_A.g, COLOR_B.g, t));
+    const b = Math.round(lerp(COLOR_A.b, COLOR_B.b, t));
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+
+  // Ajuste de texto para celdas (binaria para que quepa en ancho/alto)
+  function fitCellText(el, minPx=10, maxPx=64){
+    const parent = el.parentElement;
+    if(!parent) return;
+    const pad = 18; // margen de seguridad
+    let low = minPx, high = maxPx, best = minPx;
+    while(low <= high){
+      const mid = Math.floor((low + high)/2);
+      el.style.fontSize = mid + 'px';
+      // Medimos (fudges con padding)
+      const OK = (el.scrollWidth <= parent.clientWidth - pad) && (el.scrollHeight <= parent.clientHeight - pad);
+      if(OK){ best = mid; low = mid + 1; } else { high = mid - 1; }
+    }
+    el.style.fontSize = best + 'px';
+  }
+
+  function sizeClassForHanzi(len){
+    return len >= 4 ? 'font-bold' : 'font-bold';
+  }
+
+  function renderKnownGrid(){
+    const known = cards.filter(c=>c.known);
+    knownCount.textContent = `${known.length} palabras`;
+
+    // ordenar por challengeStreak desc
+    known.sort((a,b)=> (b.challengeStreak||0) - (a.challengeStreak||0));
+
+    const maxStreak = Math.max(0, ...known.map(c => c.challengeStreak||0));
+
+    knownGrid.innerHTML = '';
+    known.forEach(c => {
+      const value = overlayField==='hanzi' ? c.hanzi : overlayField==='pinyin' ? c.pinyin : c.meaning;
+
+      const cell = document.createElement('div');
+      cell.className = `squareCell rounded-xl bg-slate-800/70 ring-1 ring-white/10 px-2`;
+      cell.style.position = 'relative';
+
+      // contenido
+      const content = document.createElement('div');
+      content.textContent = value;
+      content.className = overlayField==='hanzi'
+        ? 'leading-tight ' + sizeClassForHanzi((value||'').length)
+        : 'leading-tight';
+      cell.appendChild(content);
+
+      // badge de racha
+      const st = c.challengeStreak || 0;
+      const t = maxStreak ? st / maxStreak : 0;
+      const badge = document.createElement('div');
+      badge.className = 'streak-badge';
+      badge.style.background = mixColor(t);
+      badge.textContent = st;
+      cell.appendChild(badge);
+
+      knownGrid.appendChild(cell);
+
+      // ajuste de texto por celda (después de insertar en DOM)
+      requestAnimationFrame(()=> fitCellText(content, 10, 64));
+    });
+  }
+
+  /* ========= Controles ========= */
+  document.getElementById('btnUnit2').onclick = () => startMission('unit2');
+  document.getElementById('btnUnit3').onclick = () => startMission('unit3');
+  document.getElementById('btnUnit4').onclick = () => startMission('unit4');
+  document.getElementById('btnUnit5').onclick = () => startMission('unit5');
+  document.getElementById('btnUnit6').onclick = () => startMission('unit6');
+  document.getElementById('btnUnit7').onclick = () => startMission('unit7');
+  document.getElementById('btnUnit8').onclick = () => startMission('unit8');
+  document.getElementById('btnUnit9').onclick = () => startMission('unit9');
+
+  document.getElementById('btnKnown').onclick   = () => startMission('known');
+  document.getElementById('btnRevise1').onclick = () => startMission('revise1');
+  document.getElementById('btnRevise2').onclick = () => startMission('revise2');
+
+  document.getElementById('btnChallenge').onclick   = () => startMission('challenge');
+  document.getElementById('btnQuizPinyin').onclick  = () => setMode('quizPinyin');
+  document.getElementById('btnQuizMeaning').onclick = () => setMode('quizMeaning');
+
+  document.getElementById('btnKnownTable').onclick = () => {
+    overlayField = 'hanzi';
+    renderKnownGrid();
+    window.scrollTo({ top: document.getElementById('knownGrid').offsetTop - 60, behavior: 'smooth' });
+  };
+  document.getElementById('btnShowHanzi').onclick   = ()=>{ overlayField='hanzi'; renderKnownGrid(); };
+  document.getElementById('btnShowPinyin').onclick  = ()=>{ overlayField='pinyin'; renderKnownGrid(); };
+  document.getElementById('btnShowMeaning').onclick = ()=>{ overlayField='meaning'; renderKnownGrid(); };
+
+  document.getElementById('btnKnow').onclick     = () => respond(true);
+  document.getElementById('btnDontKnow').onclick = () => respond(false);
+  document.getElementById('btnFlip').onclick     = () => {
+    if(mode==='flash'){ flipped=!flipped; flipped?cardEl.classList.add('flip'):cardEl.classList.remove('flip'); }
+  };
+  cardEl.onclick = () => {
+    if(currentCard && mode==='flash'){ flipped=!flipped; flipped?cardEl.classList.add('flip'):cardEl.classList.remove('flip'); }
+  };
+
+  document.getElementById('btnReset').onclick = () => {
+    if(!confirm('¿Reiniciar TODO? Se borrará el progreso y se cargarán las Unidades 2–9.')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    cards = [];
+    loadAll();
+    startMission('unit2');
+  };
+
+  // --- Nivel 1 desplegable ---
+const btnNivel1 = document.getElementById('btnNivel1');
+const nivel1Box = document.getElementById('nivel1Box');
+if(btnNivel1 && nivel1Box) {
+  btnNivel1.onclick = (e) => {
+    e.stopPropagation();
+    nivel1Box.classList.toggle('hidden');
+  };
+  // Cerrar si se hace clic fuera
+  document.addEventListener('click', (e) => {
+    if (!nivel1Box.classList.contains('hidden')) {
+      if (!nivel1Box.contains(e.target) && e.target !== btnNivel1) {
+        nivel1Box.classList.add('hidden');
+      }
+    }
+  });
+}
+
+// --- Cerrar box de Nivel 1 al elegir unidad ---
+['btnUnit2','btnUnit3','btnUnit4','btnUnit5','btnUnit6','btnUnit7','btnUnit8','btnUnit9'].forEach(id => {
+  const btn = document.getElementById(id);
+  if(btn) {
+    btn.addEventListener('click', () => {
+      const nivel1Box = document.getElementById('nivel1Box');
+      if(nivel1Box) nivel1Box.classList.add('hidden');
+    });
+  }
+});
+
+// ========= Temporizador para “hace X horas” ========= */
+  setInterval(updateLastChallengeBox, 60_000);
+
+  /* ========= Inicio ========= */
+  loadAll();
+  startMission('unit2');
+  </script>
+</body>
+</html>
