@@ -4131,44 +4131,144 @@ function setupChallengeCard() {
       streakBox.style.background = '';
     }
   }
-  // Mostrar mensaje al tocar el box
+  // Mostrar mensaje al tocar el box - CALENDARIO DE RACHAS
   if (streakBox) {
     streakBox.onclick = function() {
-      // Mostrar imagen "fuerte.png" centrada en pantalla
-      let overlay = document.getElementById('rachaFuerteOverlay');
+      // Mostrar calendario con días marcados
+      let overlay = document.getElementById('rachaCalendarOverlay');
         if (!overlay) {
           overlay = document.createElement('div');
-          overlay.id = 'rachaFuerteOverlay';
-          overlay.className = 'fade-overlay';
+          overlay.id = 'rachaCalendarOverlay';
           overlay.style.position = 'fixed';
           overlay.style.top = '0';
           overlay.style.left = '0';
           overlay.style.width = '100vw';
           overlay.style.height = '100vh';
-          overlay.style.background = 'rgba(0,0,0,0.7)';
+          overlay.style.background = 'rgba(0,0,0,0.8)';
           overlay.style.zIndex = '99999';
           overlay.style.display = 'flex';
           overlay.style.alignItems = 'center';
           overlay.style.justifyContent = 'center';
           overlay.style.cursor = 'pointer';
           overlay.style.opacity = '0';
-          overlay.style.transition = 'opacity 0.5s';
-          // Imagen centrada
-          const img = document.createElement('img');
-          img.src = 'img/fuerte.png';
-          img.alt = 'Fuerte';
-          img.style.maxWidth = '80vw';
-          img.style.maxHeight = '80vh';
-          img.style.borderRadius = '24px';
-          img.style.boxShadow = '0 0 32px #0008';
-          overlay.appendChild(img);
+          overlay.style.transition = 'opacity 0.3s';
+          
+          // Contenedor del calendario
+          const calendarBox = document.createElement('div');
+          calendarBox.style.background = '#fff';
+          calendarBox.style.borderRadius = '20px';
+          calendarBox.style.padding = '24px';
+          calendarBox.style.maxWidth = '400px';
+          calendarBox.style.boxShadow = '0 20px 60px rgba(0,0,0,0.4)';
+          calendarBox.onclick = (e) => e.stopPropagation();
+          
+          // Título
+          const title = document.createElement('h3');
+          title.textContent = 'Calendario de Rachas - Enero 2026';
+          title.style.fontSize = '20px';
+          title.style.fontWeight = 'bold';
+          title.style.marginBottom = '16px';
+          title.style.textAlign = 'center';
+          title.style.color = '#1e293b';
+          calendarBox.appendChild(title);
+          
+          // Encabezado de días de la semana
+          const daysHeader = document.createElement('div');
+          daysHeader.style.display = 'grid';
+          daysHeader.style.gridTemplateColumns = 'repeat(7, 1fr)';
+          daysHeader.style.gap = '8px';
+          daysHeader.style.marginBottom = '12px';
+          ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].forEach(day => {
+            const dayLabel = document.createElement('div');
+            dayLabel.textContent = day;
+            dayLabel.style.textAlign = 'center';
+            dayLabel.style.fontSize = '12px';
+            dayLabel.style.fontWeight = '600';
+            dayLabel.style.color = '#64748b';
+            daysHeader.appendChild(dayLabel);
+          });
+          calendarBox.appendChild(daysHeader);
+          
+          // Grid de días
+          const daysGrid = document.createElement('div');
+          daysGrid.style.display = 'grid';
+          daysGrid.style.gridTemplateColumns = 'repeat(7, 1fr)';
+          daysGrid.style.gap = '8px';
+          
+          // Enero 2026 comienza en jueves (día 4)
+          // Agregar espacios vacíos antes del día 1
+          for (let i = 0; i < 4; i++) {
+            const emptyDay = document.createElement('div');
+            daysGrid.appendChild(emptyDay);
+          }
+          
+          // Agregar los días del mes (31 días)
+          for (let day = 1; day <= 31; day++) {
+            const dayCell = document.createElement('div');
+            dayCell.textContent = day;
+            dayCell.style.aspectRatio = '1';
+            dayCell.style.display = 'flex';
+            dayCell.style.alignItems = 'center';
+            dayCell.style.justifyContent = 'center';
+            dayCell.style.fontSize = '14px';
+            dayCell.style.fontWeight = '500';
+            dayCell.style.borderRadius = '8px';
+            dayCell.style.cursor = 'default';
+            
+            // Colorear según los días especificados
+            if (day === 1) {
+              // Día 1: rojo
+              dayCell.style.background = '#dc2626';
+              dayCell.style.color = '#fff';
+              dayCell.style.fontWeight = 'bold';
+            } else if (day >= 2 && day <= 9) {
+              // Días 2-9: verde
+              dayCell.style.background = '#10b981';
+              dayCell.style.color = '#fff';
+              dayCell.style.fontWeight = 'bold';
+            } else {
+              // Otros días: gris claro
+              dayCell.style.background = '#f1f5f9';
+              dayCell.style.color = '#64748b';
+            }
+            
+            daysGrid.appendChild(dayCell);
+          }
+          
+          calendarBox.appendChild(daysGrid);
+          
+          // Leyenda
+          const legend = document.createElement('div');
+          legend.style.marginTop = '20px';
+          legend.style.display = 'flex';
+          legend.style.justifyContent = 'center';
+          legend.style.gap = '16px';
+          legend.style.fontSize = '12px';
+          
+          const greenLegend = document.createElement('div');
+          greenLegend.innerHTML = '<span style="display:inline-block;width:12px;height:12px;background:#10b981;border-radius:3px;margin-right:6px;"></span>Racha activa';
+          greenLegend.style.display = 'flex';
+          greenLegend.style.alignItems = 'center';
+          
+          const redLegend = document.createElement('div');
+          redLegend.innerHTML = '<span style="display:inline-block;width:12px;height:12px;background:#dc2626;border-radius:3px;margin-right:6px;"></span>Racha perdida';
+          redLegend.style.display = 'flex';
+          redLegend.style.alignItems = 'center';
+          
+          legend.appendChild(greenLegend);
+          legend.appendChild(redLegend);
+          calendarBox.appendChild(legend);
+          
+          overlay.appendChild(calendarBox);
           document.body.appendChild(overlay);
+          
           // Fade in
           setTimeout(() => { overlay.style.opacity = '1'; }, 10);
-          // Cerrar al hacer click en cualquier parte con fade out
+          
+          // Cerrar al hacer click fuera del calendario
           overlay.onclick = function() {
             overlay.style.opacity = '0';
-            setTimeout(() => { overlay.remove(); }, 500);
+            setTimeout(() => { overlay.remove(); }, 300);
           };
         }
     };

@@ -109,15 +109,15 @@
     /* --- Fondo dinámico tipo conic/radial  */
     .challenge-bg {
       margin: 0;
-      background-color: #5d2d91;
+      background-color: #5d2d91 !important;
       background-image:
-        radial-gradient(transparent 1.2em, #4c1d95 0.6em),
-        conic-gradient(at 2em 2em, transparent 270deg, #4203 270deg),
-        conic-gradient(at 2em 2em, transparent 270deg, #4204 270deg),
-        conic-gradient(at 2em 2em, transparent 270deg, #4205 270deg),
-        conic-gradient(at 2em 2em, transparent 270deg, #4206 270deg);
-      background-size: 2em 2em, 8em 8em, 8em 8em, 8em 8em, 8em 8em;
-      animation: bpx 12s infinite linear, bpy 12s -3.75s infinite linear;
+        radial-gradient(transparent 1.2em, #4c1d95 0.6em) !important,
+        conic-gradient(at 2em 2em, transparent 270deg, #4203 270deg) !important,
+        conic-gradient(at 2em 2em, transparent 270deg, #4204 270deg) !important,
+        conic-gradient(at 2em 2em, transparent 270deg, #4205 270deg) !important,
+        conic-gradient(at 2em 2em, transparent 270deg, #4206 270deg) !important;
+      background-size: 2em 2em, 8em 8em, 8em 8em, 8em 8em, 8em 8em !important;
+      animation: bpx 12s infinite linear, bpy 12s -3.75s infinite linear !important;
     }
 
     /* Horizontal */
@@ -4143,44 +4143,144 @@ function setupChallengeCard() {
       streakBox.style.background = '';
     }
   }
-  // Mostrar mensaje al tocar el box
+  // Mostrar mensaje al tocar el box - CALENDAR OF STREAKS
   if (streakBox) {
     streakBox.onclick = function() {
-      // Mostrar imagen "fuerte.png" centrada en pantalla
-      let overlay = document.getElementById('rachaFuerteOverlay');
+      // Display calendar with marked days
+      let overlay = document.getElementById('rachaCalendarOverlay');
         if (!overlay) {
           overlay = document.createElement('div');
-          overlay.id = 'rachaFuerteOverlay';
-          overlay.className = 'fade-overlay';
+          overlay.id = 'rachaCalendarOverlay';
           overlay.style.position = 'fixed';
           overlay.style.top = '0';
           overlay.style.left = '0';
           overlay.style.width = '100vw';
           overlay.style.height = '100vh';
-          overlay.style.background = 'rgba(0,0,0,0.7)';
+          overlay.style.background = 'rgba(0,0,0,0.8)';
           overlay.style.zIndex = '99999';
           overlay.style.display = 'flex';
           overlay.style.alignItems = 'center';
           overlay.style.justifyContent = 'center';
           overlay.style.cursor = 'pointer';
           overlay.style.opacity = '0';
-          overlay.style.transition = 'opacity 0.5s';
-          // Imagen centrada
-          const img = document.createElement('img');
-          img.src = 'img/fuerte.png';
-          img.alt = 'Fuerte';
-          img.style.maxWidth = '80vw';
-          img.style.maxHeight = '80vh';
-          img.style.borderRadius = '24px';
-          img.style.boxShadow = '0 0 32px #0008';
-          overlay.appendChild(img);
+          overlay.style.transition = 'opacity 0.3s';
+          
+          // Calendar container
+          const calendarBox = document.createElement('div');
+          calendarBox.style.background = '#fff';
+          calendarBox.style.borderRadius = '20px';
+          calendarBox.style.padding = '24px';
+          calendarBox.style.maxWidth = '400px';
+          calendarBox.style.boxShadow = '0 20px 60px rgba(0,0,0,0.4)';
+          calendarBox.onclick = (e) => e.stopPropagation();
+          
+          // Title
+          const title = document.createElement('h3');
+          title.textContent = 'Streak Calendar - January 2026';
+          title.style.fontSize = '20px';
+          title.style.fontWeight = 'bold';
+          title.style.marginBottom = '16px';
+          title.style.textAlign = 'center';
+          title.style.color = '#1e293b';
+          calendarBox.appendChild(title);
+          
+          // Days of the week header
+          const daysHeader = document.createElement('div');
+          daysHeader.style.display = 'grid';
+          daysHeader.style.gridTemplateColumns = 'repeat(7, 1fr)';
+          daysHeader.style.gap = '8px';
+          daysHeader.style.marginBottom = '12px';
+          ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
+            const dayLabel = document.createElement('div');
+            dayLabel.textContent = day;
+            dayLabel.style.textAlign = 'center';
+            dayLabel.style.fontSize = '12px';
+            dayLabel.style.fontWeight = '600';
+            dayLabel.style.color = '#64748b';
+            daysHeader.appendChild(dayLabel);
+          });
+          calendarBox.appendChild(daysHeader);
+          
+          // Days grid
+          const daysGrid = document.createElement('div');
+          daysGrid.style.display = 'grid';
+          daysGrid.style.gridTemplateColumns = 'repeat(7, 1fr)';
+          daysGrid.style.gap = '8px';
+          
+          // January 2026 starts on Thursday (day 4)
+          // Add empty spaces before day 1
+          for (let i = 0; i < 4; i++) {
+            const emptyDay = document.createElement('div');
+            daysGrid.appendChild(emptyDay);
+          }
+          
+          // Add the days of the month (31 days)
+          for (let day = 1; day <= 31; day++) {
+            const dayCell = document.createElement('div');
+            dayCell.textContent = day;
+            dayCell.style.aspectRatio = '1';
+            dayCell.style.display = 'flex';
+            dayCell.style.alignItems = 'center';
+            dayCell.style.justifyContent = 'center';
+            dayCell.style.fontSize = '14px';
+            dayCell.style.fontWeight = '500';
+            dayCell.style.borderRadius = '8px';
+            dayCell.style.cursor = 'default';
+            
+            // Color according to specified days
+            if (day === 1) {
+              // Day 1: red
+              dayCell.style.background = '#dc2626';
+              dayCell.style.color = '#fff';
+              dayCell.style.fontWeight = 'bold';
+            } else if (day >= 2 && day <= 9) {
+              // Days 2-9: green
+              dayCell.style.background = '#10b981';
+              dayCell.style.color = '#fff';
+              dayCell.style.fontWeight = 'bold';
+            } else {
+              // Other days: light gray
+              dayCell.style.background = '#f1f5f9';
+              dayCell.style.color = '#64748b';
+            }
+            
+            daysGrid.appendChild(dayCell);
+          }
+          
+          calendarBox.appendChild(daysGrid);
+          
+          // Legend
+          const legend = document.createElement('div');
+          legend.style.marginTop = '20px';
+          legend.style.display = 'flex';
+          legend.style.justifyContent = 'center';
+          legend.style.gap = '16px';
+          legend.style.fontSize = '12px';
+          
+          const greenLegend = document.createElement('div');
+          greenLegend.innerHTML = '<span style="display:inline-block;width:12px;height:12px;background:#10b981;border-radius:3px;margin-right:6px;"></span>Active streak';
+          greenLegend.style.display = 'flex';
+          greenLegend.style.alignItems = 'center';
+          
+          const redLegend = document.createElement('div');
+          redLegend.innerHTML = '<span style="display:inline-block;width:12px;height:12px;background:#dc2626;border-radius:3px;margin-right:6px;"></span>Lost streak';
+          redLegend.style.display = 'flex';
+          redLegend.style.alignItems = 'center';
+          
+          legend.appendChild(greenLegend);
+          legend.appendChild(redLegend);
+          calendarBox.appendChild(legend);
+          
+          overlay.appendChild(calendarBox);
           document.body.appendChild(overlay);
+          
           // Fade in
           setTimeout(() => { overlay.style.opacity = '1'; }, 10);
-          // Cerrar al hacer click en cualquier parte con fade out
+          
+          // Close when clicking outside calendar
           overlay.onclick = function() {
             overlay.style.opacity = '0';
-            setTimeout(() => { overlay.remove(); }, 500);
+            setTimeout(() => { overlay.remove(); }, 300);
           };
         }
     };

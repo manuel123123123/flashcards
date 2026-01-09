@@ -270,32 +270,44 @@
       else    { ensureReviseFlags(c); c.revise1 = true; }
     }
 
-    if(knew) sessionCorrect++;
+    // Animación visual
+    if(knew){
+      cardEl.classList.remove('shakeAnim','popAnim'); void cardEl.offsetWidth;
+      cardEl.classList.add('popAnim');
+      sessionCorrect++;
+    } else {
+      cardEl.classList.remove('popAnim','shakeAnim'); void cardEl.offsetWidth;
+      cardEl.classList.add('shakeAnim');
+    }
+
     todayReviewed++;
     saveAll();
-    nextCard();
+    setTimeout(() => nextCard(), 300);
   }
 
   function nextCard(){
     flipped=false; cardEl.classList.remove('flip');
     
+    // Change content
+    currentCard = sessionQueue.shift()||null;
+    renderCard();
+    updateStats();
+    
     // Flip animation with delay
     const cardWrap = document.getElementById('cardWrap');
-    cardWrap.classList.add('card-flip-vert');
-    setTimeout(() => {
-      cardWrap.classList.add('flipping');
+    if(currentCard && sessionQueue.length > 0){
+      cardWrap.classList.add('card-flip-vert');
       setTimeout(() => {
-        // Change content at midpoint
-        currentCard = sessionQueue.shift()||null;
-        renderCard();
-        updateStats();
-        cardWrap.classList.remove('flipping');
-        cardWrap.classList.add('flipped');
+        cardWrap.classList.add('flipping');
         setTimeout(() => {
-          cardWrap.classList.remove('flipped', 'card-flip-vert');
-        }, 440);
-      }, 220);
-    }, 500);
+          cardWrap.classList.remove('flipping');
+          cardWrap.classList.add('flipped');
+          setTimeout(() => {
+            cardWrap.classList.remove('flipped', 'card-flip-vert');
+          }, 440);
+        }, 220);
+      }, 50);
+    }
   }
 
   function renderCard(){
@@ -443,8 +455,8 @@
   document.getElementById('btnRevise1').onclick = () => startMission('revise1');
   document.getElementById('btnRevise2').onclick = () => startMission('revise2');
 
-  document.getElementById('btnQuizPinyin').onclick = () => setMode('quizPinyin');
-  document.getElementById('btnQuizMeaning').onclick = () => setMode('quizMeaning');
+  // document.getElementById('btnQuizPinyin').onclick = () => setMode('quizPinyin');
+  // document.getElementById('btnQuizMeaning').onclick = () => setMode('quizMeaning');
 
   document.getElementById('btnKnow').onclick = () => answer(true);
   document.getElementById('btnDontKnow').onclick = () => answer(false);
