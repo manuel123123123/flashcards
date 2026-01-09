@@ -3808,8 +3808,8 @@
               <!-- Botón 12 Bestias -->
               <button id="btnBestias12" class="px-3 py-2 rounded-xl font-semibold text-white jersey-font-desafios-especiales" style="line-height: 1.1; min-height: 60px; background: linear-gradient(135deg, #D9B38C, #B8865A); border: 2px solid #8B7355; margin-top: 8px; position: relative;">🐲 DESAFÍO 12 BESTIAS 🐲<br><span style="font-size: 0.7em; color: #F5DEB3;">10000 HP • Todos los animales</span></button>
               
-              <!-- Botón La Emperatriz -->
-              <button id="btnLaEmperatriz" class="px-3 py-2 rounded-xl font-semibold text-white jersey-font-desafios-especiales" style="line-height: 1.1; min-height: 60px; background: linear-gradient(135deg, #2f998e, #22726e); border: 2px solid #48D1CC; margin-top: 8px; position: relative;">👑 LA EMPERATRIZ 👑<br><span style="font-size: 0.7em; color: #AFEEEE;">15000 HP • Todos los Caracteres</span></button>
+              <!-- Botón El Jefe -->
+              <button id="btnLaEmperatriz" class="px-3 py-2 rounded-xl font-semibold text-white jersey-font-desafios-especiales" style="line-height: 1.1; min-height: 60px; background: linear-gradient(135deg, #2f998e, #22726e); border: 2px solid #48D1CC; margin-top: 8px; position: relative;">👑 EL JEFE 👑<br><span style="font-size: 0.7em; color: #AFEEEE;">5000 HP • Todos los Caracteres</span></button>
               
               <!-- Separador visual -->
               <div style="height: 1px; background: rgba(255, 255, 255, 0.2); margin: 16px 0;"></div>
@@ -7768,6 +7768,51 @@
       lastChallengeAt = null;
       horoscopeAnimalsUnlocked = [];
     }
+
+    // ========== MODO DOCUMENTAL: Defaults para pegar fuerte ==========
+    // Nota: esto NO toca progreso de cartas; solo asegura nivel (XP) y racha mínima.
+    (function applyDocumentaryDefaults() {
+      const DEFAULT_STREAK_DAYS = 20;
+      const DEFAULT_LEVEL = 14;
+      const DEFAULT_CHAR_LEVEL = 10;
+
+      const xpForTargetLevel = (() => {
+        let sum = 0;
+        for (let lvl = 1; lvl < DEFAULT_LEVEL; lvl++) sum += xpForLevel(lvl);
+        return sum;
+      })();
+
+      if (typeof xpPoints !== 'number' || !isFinite(xpPoints)) xpPoints = 0;
+      if (xpPoints < xpForTargetLevel) xpPoints = xpForTargetLevel;
+
+      if (typeof streak !== 'number' || !isFinite(streak)) streak = 0;
+      if (streak < DEFAULT_STREAK_DAYS) streak = DEFAULT_STREAK_DAYS;
+
+      if (!lastChallengeAt) lastChallengeAt = Date.now();
+
+      // Character "level" is stored as challengeStreak (0..100)
+      if (Array.isArray(cards)) {
+        cards.forEach(card => {
+          if (!card || card.isHoroscopeAnimal) return;
+          const current = Number(card.challengeStreak || 0);
+          const next = Math.min(100, Math.max(DEFAULT_CHAR_LEVEL, isFinite(current) ? current : 0));
+          card.challengeStreak = next;
+
+          const best = Number(card.challengeBest || 0);
+          card.challengeBest = Math.max(isFinite(best) ? best : 0, next);
+        });
+      }
+
+      console.log('🎬 Documentary defaults applied:', {
+        minLevel: DEFAULT_LEVEL,
+        minXp: xpForTargetLevel,
+        xpPoints,
+        minStreakDays: DEFAULT_STREAK_DAYS,
+        streak,
+        minCharacterLevel: DEFAULT_CHAR_LEVEL
+      });
+    })();
+    // ================================================================
     
     // Inicializar caracteres si es necesario
     updateLoadingProgress(80, 'Inicializando contenido...');
@@ -9363,10 +9408,10 @@
   let ultimateChallengeTimer = 500; // Tiempo en segundos (8 min 20 seg)
   let ultimateChallengeTimerInterval = null; // Intervalo del timer
 
-  // ====== VARIABLES PARA LA EMPERATRIZ ======
+  // ====== VARIABLES PARA EL JEFE ======
   let emperatrizActive = false;
-  let emperatrizHP = 15000; // Vida de la Emperatriz
-  let emperatrizMaxHP = 15000; // Vida máxima (para calcular porcentaje)
+  let emperatrizHP = 5000; // Vida de El Jefe
+  let emperatrizMaxHP = 5000; // Vida máxima (para calcular porcentaje)
   let emperatrizTimer = 300; // 5 minutos = 300 segundos
   let emperatrizTimerInterval = null;
   let emperatrizLives = 3; // Tres vidas
@@ -12733,10 +12778,10 @@ function updateEmperatrizHPBar() {
   const hpBar = document.getElementById('emperatrizHPBar');
   if (!hpBar) return;
   
-  const maxHP = typeof emperatrizMaxHP === 'number' ? emperatrizMaxHP : 15000;
+  const maxHP = typeof emperatrizMaxHP === 'number' ? emperatrizMaxHP : 5000;
   const hpPercentage = (emperatrizHP / maxHP) * 100;
   const hpColor = hpPercentage > 60 ? '#22d3ee' : hpPercentage > 30 ? '#f59e0b' : '#ef4444';
-  const titleText = currentChallengeConfig ? `${currentChallengeConfig.emoji} ${currentChallengeConfig.name} ${currentChallengeConfig.emoji}` : '👑 LA EMPERATRIZ 👑';
+  const titleText = currentChallengeConfig ? `${currentChallengeConfig.emoji} ${currentChallengeConfig.name} ${currentChallengeConfig.emoji}` : '👑 EL JEFE 👑';
   hpBar.innerHTML = `
     <div style="color: #ff8c42; margin-bottom: 6px; font-size: 14px;">${titleText}</div>
     <div style="background: #333; border-radius: 8px; overflow: hidden; height: 12px; margin-bottom: 4px;">
@@ -12776,7 +12821,7 @@ function updateEmperatrizHPBar() {
 }
 
 // Variable para almacenar el HP anterior para animación
-let previousEmperatrizHP = (typeof emperatrizMaxHP === 'number' ? emperatrizMaxHP : 15000);
+let previousEmperatrizHP = (typeof emperatrizMaxHP === 'number' ? emperatrizMaxHP : 5000);
 
 function animateEmperatrizHPChange(newHP) {
   const hpBar = document.getElementById('emperatrizHPBar');
@@ -12816,7 +12861,7 @@ function animateEmperatrizHPChange(newHP) {
     const currentHP = Math.round(startHP + (endHP - startHP) * easeProgress);
     
     // Actualizar solo el número, mantener la barra
-  const maxHP = typeof emperatrizMaxHP === 'number' ? emperatrizMaxHP : 15000;
+  const maxHP = typeof emperatrizMaxHP === 'number' ? emperatrizMaxHP : 5000;
   const hpPercentage = (currentHP / maxHP) * 100;
     const hpColor = hpPercentage > 60 ? '#22d3ee' : hpPercentage > 30 ? '#f59e0b' : '#ef4444';
     
@@ -12901,10 +12946,10 @@ function updateEmperatrizHPBarImmediate(currentDisplayHP, actualHP) {
   // Detectar si hubo daño
   const wasDamaged = actualHP < currentDisplayHP;
   
-  const maxHP = typeof emperatrizMaxHP === 'number' ? emperatrizMaxHP : 15000;
+  const maxHP = typeof emperatrizMaxHP === 'number' ? emperatrizMaxHP : 5000;
   const hpPercentage = (actualHP / maxHP) * 100;
   const hpColor = hpPercentage > 60 ? '#22d3ee' : hpPercentage > 30 ? '#f59e0b' : '#ef4444';
-  const titleText = currentChallengeConfig ? `${currentChallengeConfig.emoji} ${currentChallengeConfig.name} ${currentChallengeConfig.emoji}` : '👑 LA EMPERATRIZ 👑';
+  const titleText = currentChallengeConfig ? `${currentChallengeConfig.emoji} ${currentChallengeConfig.name} ${currentChallengeConfig.emoji}` : '👑 EL JEFE 👑';
   hpBar.innerHTML = `
     <div style="color: #ff8c42; margin-bottom: 6px; font-size: 14px;">${titleText}</div>
     <div style="background: #333; border-radius: 8px; overflow: hidden; height: 12px; margin-bottom: 4px;">
@@ -13004,10 +13049,10 @@ function updateEmperatrizHPBar() {
   const hpBar = document.getElementById('emperatrizHPBar');
   if (!hpBar) return;
   
-  const maxHP = typeof emperatrizMaxHP === 'number' ? emperatrizMaxHP : 15000;
+  const maxHP = typeof emperatrizMaxHP === 'number' ? emperatrizMaxHP : 5000;
   const hpPercentage = (emperatrizHP / maxHP) * 100;
   const hpColor = hpPercentage > 60 ? '#22d3ee' : hpPercentage > 30 ? '#f59e0b' : '#ef4444';
-  const titleText = currentChallengeConfig ? `${currentChallengeConfig.emoji} ${currentChallengeConfig.name} ${currentChallengeConfig.emoji}` : '👑 LA EMPERATRIZ 👑';
+  const titleText = currentChallengeConfig ? `${currentChallengeConfig.emoji} ${currentChallengeConfig.name} ${currentChallengeConfig.emoji}` : '👑 EL JEFE 👑';
   hpBar.innerHTML = `
     <div style="color: #ff8c42; margin-bottom: 6px; font-size: 14px;">${titleText}</div>
     <div style="background: #333; border-radius: 8px; overflow: hidden; height: 12px; margin-bottom: 4px;">
@@ -15606,7 +15651,7 @@ function showCursedPowerUpConfirmation(powerUp) {
   `;
   
   notification.innerHTML = `
-    <div style="font-size: 24px; margin-bottom: 10px; line-height: 1.2;">💀 ¡La Emperatriz<br>Ataca! 💀</div>
+    <div style="font-size: 24px; margin-bottom: 10px; line-height: 1.2;">💀 ¡El Jefe<br>Ataca! 💀</div>
     <div style="font-size: 22px; margin-bottom: 8px; line-height: 1.2;">${powerUp.name}</div>
     <div style="font-size: 20px; color: #ccc; line-height: 1.3;">${powerUp.description}</div>
   `;
@@ -15824,7 +15869,7 @@ function showEmperatrizVictory() {
         ">👑 ¡VICTORIA ÉPICA! 👑</h2>
         
         <div style="color: #ff8c42; font-size: 20px; margin-bottom: 15px;">
-          ¡Has derrotado a La Emperatriz!
+          ¡Has derrotado a El Jefe!
         </div>
         
         <div style="color: white; font-size: 18px; margin-bottom: 20px; line-height: 1.6;">
@@ -16328,7 +16373,7 @@ const challengeConfigs = {
     name: 'LA EMPERATRIZ',
     emoji: '👑',
     displayName: 'EMPERATRIZ',
-    hp: 15000,
+    hp: 5000,
     timer: 300, // 5 minutos
     lives: 3,
     cardPool: 'all', // 'all', 'n1', 'n2', etc.
@@ -16764,7 +16809,7 @@ function showEmperatrizLastStand() {
         💀 ¡FASE FINAL! 💀
       </div>
       <div style="font-size: 20px; margin-bottom: 25px; color: #aaaaaa;">
-        La Emperatriz desata su poder
+        El Jefe desata su poder
       </div>
       
       <div id="lastStandOptions" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
